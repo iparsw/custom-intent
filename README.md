@@ -86,6 +86,7 @@ intents_method :
 model_name : its just the name of your model
 
 threshold : its the accuracy threshold of your model its set to 0.25 by default
+
 w_and_b : it will connect to wandb if set to True (you will need to login first)
 
 tensorboard : Not available at the time
@@ -100,11 +101,17 @@ def train_model(self, epoch=500, batch_size=5, learning_rate=None, ignore_letter
 ```
 
 epoch : an epoch basicly means training the neural network with all the training data for one cycle and this arguament says how many of this circles it will go
+
 batch_size : Integer or None. Number of samples per gradient update (you can just ignore this)
+
 learning_rate : Learning rate is a hyper-parameter that controls the weights of our neural network with respect to the loss gradient. It defines how quickly the neural network updates the concepts it has learned. (in simple terms if its bigger our model learn faster but it can go of track faster)
+
 ignore_letters : a list of letters you want to ignore (by defualt it will ignore (? . , !) (you can pas a empty list if you dont want to ignore (?.,!)))
+
 timeIt : it will just time the training
+
 model_type : you can select one of the defined models (we will look at the available models later on)
+
 validation_split : you can split a portion of your data for validation only (model will not get trained on them) it should be float between 0 and 1 (i will recommend to not create a validation split unless you have a really huge data set with lots of similar patterns)
 
 ## save_model
@@ -136,7 +143,9 @@ def request_tag(self, message, debug_mode=False, threshold=None):
 ```
 
 message : the actual message
+
 debug_mode : it will print every step of the procces for debuging
+
 threshold : you can set a accuracy threshold if not specified it will use the  threshold you set when initilizing the bot and if you didnt specified there either its set to 0.25 by default
 
 ## request_response
@@ -148,16 +157,25 @@ the same as request_tag but it will return a random response from intents
 you can choose one of the defined models according to the size of diffrente patterns and tags you have (you can just try and see wich one is right for your use case)
 
 xs1 : a very fast and small model
+
 xs2 : still small but better for more tags
 
+
 s1 : the default model (hidden layers : 128-64)
+
 s2 : its better than s1 when you have small number of similar tags that s1 cant predict
+
 s3 : most of the time you dont need this (hidden layers : 128-64-64)
+
 s4 : its like a s2 on streoid its suited when you have a lot of patterns for tags that have similar patterns
+
 s5 : most of the time you dont need this either (hidden layers : 128-64-64-32)
 
+
 m1 : great balance of perfomance and accuracy for medium size intent files
+
 m2 : great accuracy for medium size intent files
+
 m3 : m3 to m1 is like s2 to s1 its more suited when you have smaller number of tags but hard to difrentiat
 
 
