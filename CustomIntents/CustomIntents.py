@@ -198,6 +198,42 @@ class ChatBot:
             self.model.add(Dense(32, activation='relu'))
             self.model.add(Dropout(0.5))
             self.model.add(Dense(len(train_y[0]), activation='softmax'))
+        # l1 model
+        elif model_type == "l1":
+            self.model = Sequential()
+            self.model.add(Dense(512, input_shape=(len(train_x[0]),), activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(256, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(128, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(len(train_y[0]), activation='softmax'))
+        # l2 model
+        elif model_type == "l2":
+            self.model = Sequential()
+            self.model.add(Dense(512, input_shape=(len(train_x[0]),), activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(256, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(128, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(64, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(len(train_y[0]), activation='softmax'))
+        # l3 model
+        elif model_type == "l3":
+            self.model = Sequential()
+            self.model.add(Dense(512, input_shape=(len(train_x[0]),), activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(256, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(128, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(64, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(32, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(len(train_y[0]), activation='softmax'))
 
         # defining layers end
         # printing summery
