@@ -52,10 +52,12 @@ class ChatBot:
         # defualt learning_rate
 
         if learning_rate is None:
-            if model_type == "m3" or model_type == "s5" or model_type == "s4" or model_type == "s3":
-                learning_rate = 0.001
-            elif model_type == "m2" or model_type == "s2":
+            if model_type == "m2" or model_type == "s2" or model_type == "l1":
                 learning_rate = 0.005
+            elif model_type == "m3" or model_type == "s5" or model_type == "s4" or model_type == "s3":
+                learning_rate = 0.001
+            elif model_type == "l2":
+                learning_rate = 0.0005
             else:
                 learning_rate = 0.01
 
