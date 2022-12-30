@@ -45,7 +45,7 @@ class ChatBot:
     def load_json_intents(self, intents):
         self.intents = json.loads(open(intents).read())
 
-    def train_model(self, epoch=500, batch_size=5, learning_rate=None, ignore_letters=None, timeIt=True,
+    def train_model(self, epoch=None, batch_size=5, learning_rate=None, ignore_letters=None, timeIt=True,
                     model_type='s1', validation_split=0):
         start_time = perf_counter()
 
@@ -58,6 +58,13 @@ class ChatBot:
                 learning_rate = 0.005
             else:
                 learning_rate = 0.01
+
+        # defualt epoch
+        if epoch is None:
+            if model_type == "l1":
+                epoch = 200
+            else:
+                epoch = 500
         if ignore_letters is None:
             ignore_letters = ['!', '?', ',', '.']
         self.words = []
@@ -257,7 +264,8 @@ class ChatBot:
         # training ends
 
         if timeIt:
-            print(perf_counter() - start_time)
+            print(f"training time in sec : {perf_counter() - start_time}")
+            print(f"training time in min : {(perf_counter() - start_time) / 60}")
 
     def save_model(self, model_name=None):
         if model_name is None:
