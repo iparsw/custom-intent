@@ -9,7 +9,6 @@ setuptools.setup(
     author="Parsa Roshanak (iparsw) ",
     author_email="parsaroshanak@gmail.com",
     long_description=long_description,
-    long_descriptio_content_type="text/markdown",
     url="",
     packages=["CustomIntents"],
     install_requires=[]
