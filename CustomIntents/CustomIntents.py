@@ -60,6 +60,8 @@ class ChatBot:
                 learning_rate = 0.0005
             elif model_type == "l3":
                 learning_rate = 0.00025
+            elif model_type == "l4":
+                learning_rate = 0.0002
             else:
                 learning_rate = 0.01
 
@@ -69,6 +71,8 @@ class ChatBot:
                 epoch = 200
             elif model_type == "l3":
                 epoch = 1000
+            elif model_type == "l4":
+                epoch = 2000
             else:
                 epoch = 500
         if ignore_letters is None:
@@ -282,7 +286,7 @@ class ChatBot:
         sgd = SGD(learning_rate=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
         self.model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
         self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
-                                   verbose=2, validation_split=validation_split, callbacks=call_back_list)
+                                   verbose=1, validation_split=validation_split, callbacks=call_back_list)
         # training ends
 
         if timeIt:
