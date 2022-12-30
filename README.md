@@ -1,9 +1,9 @@
 
 # Custom Intents
 
-0.1.0
+V0.1.0
 
-Really high level API to create a simple chat bot in few lines of code
+Really high level API to create simple chat bots in few lines of code
 
 the package is inspired by NeuralNine, neuralintents
 package 
@@ -80,10 +80,14 @@ def __init__(self, intents, intent_methods={}, model_name="assistant_model", thr
                  tensorboard=False):
 ```
 intents : its the path of your intents file
+
 intents_method :
+
 model_name : its just the name of your model
+
 threshold : its the accuracy threshold of your model its set to 0.25 by default
 w_and_b : it will connect to wandb if set to True (you will need to login first)
+
 tensorboard : Not available at the time
 
 ## Training
