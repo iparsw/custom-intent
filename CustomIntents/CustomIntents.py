@@ -58,6 +58,8 @@ class ChatBot:
                 learning_rate = 0.001
             elif model_type == "l2":
                 learning_rate = 0.0005
+            elif model_type == "l3":
+                learning_rate = 0.00025
             else:
                 learning_rate = 0.01
 
@@ -65,6 +67,8 @@ class ChatBot:
         if epoch is None:
             if model_type == "l1":
                 epoch = 200
+            elif model_type == "l3":
+                epoch = 1000
             else:
                 epoch = 500
         if ignore_letters is None:
