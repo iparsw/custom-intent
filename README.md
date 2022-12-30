@@ -68,7 +68,7 @@ while not done:
 }
 ```
 
-## ChatBot Class
+# ChatBot Class
 
 the first class in CustomIntent moudle is ChatBot
 its exacly what you thing a chat bot
@@ -179,3 +179,39 @@ m2 : great accuracy for medium size intent files
 m3 : m3 to m1 is like s2 to s1 its more suited when you have smaller number of tags but hard to difrentiat
 
 
+# JsonIntents Class
+
+this class is used to add and edit Json files containing intents
+```python
+def __init__(self, json_file_adrees):
+```
+
+you just need to pass the path of the json file the function you want
+
+## add_pattern_app
+
+its a function that ask you to input new patterns for tags (you can pass an especific tag to ask for that or it will cycle through them all and will go to the next tag by inputing D or d)
+
+## add_tag_app
+
+it will add new tags to your json file 
+
+```python
+def add_tag_app(self, tag=None, responses=None):
+```
+tag : the name of the new tag you want to add
+
+responses : a list of responses (you can add later on as well)
+
+## delete_duplicate_app
+
+it will check for duplicate in patterns and deletes them for you
+
+## an example of using this class
+
+```python
+file = JsonIntents("internet intents.json")
+file.delete_duplicate_app()
+file.add_tag_app(tag="about")
+file.add_pattern_app("about")
+```
