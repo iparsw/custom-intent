@@ -247,6 +247,22 @@ class ChatBot:
             self.model.add(Dense(32, activation='relu'))
             self.model.add(Dropout(0.5))
             self.model.add(Dense(len(train_y[0]), activation='softmax'))
+        # l4 model
+        elif model_type == "l4":
+            self.model = Sequential()
+            self.model.add(Dense(512, input_shape=(len(train_x[0]),), activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(256, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(128, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(64, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(32, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(16, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(len(train_y[0]), activation='softmax'))
 
         # defining layers end
         # printing summery
@@ -266,7 +282,7 @@ class ChatBot:
         sgd = SGD(learning_rate=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
         self.model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
         self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
-                                   verbose=1, validation_split=validation_split, callbacks=call_back_list)
+                                   verbose=2, validation_split=validation_split, callbacks=call_back_list)
         # training ends
 
         if timeIt:
