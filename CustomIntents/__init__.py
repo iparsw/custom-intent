@@ -1,1 +1,1 @@
-from custom_intents import ChatBot, JsonIntents
+from CustomIntents.custom_intents import ChatBot, JsonIntents
