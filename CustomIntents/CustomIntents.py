@@ -62,6 +62,8 @@ class ChatBot:
                 learning_rate = 0.00025
             elif model_type == "l4":
                 learning_rate = 0.0002
+            elif model_type == "l5" or model_type == "l5f":
+                learning_rate = 0.0001
             else:
                 learning_rate = 0.01
 
@@ -69,9 +71,9 @@ class ChatBot:
         if epoch is None:
             if model_type == "l1":
                 epoch = 200
-            elif model_type == "l3":
+            elif model_type == "l3" or model_type == "l5f":
                 epoch = 1000
-            elif model_type == "l4":
+            elif model_type == "l4" or model_type == "l5":
                 epoch = 2000
             else:
                 epoch = 500
@@ -267,7 +269,19 @@ class ChatBot:
             self.model.add(Dense(16, activation='relu'))
             self.model.add(Dropout(0.5))
             self.model.add(Dense(len(train_y[0]), activation='softmax'))
-
+        # l5
+        elif model_type == "l5" or model_type == "l5f":
+            self.model = Sequential()
+            self.model.add(Dense(512, input_shape=(len(train_x[0]),), activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(256, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(128, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(128, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(64, activation='relu'))
+            self.model.add(Dense(len(train_y[0]), activation='softmax'))
         # defining layers end
         # printing summery
         print(self.model.summary())
