@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="CustomIntents",
-    version="0.1.2",
+    version="0.1.3",
     author="Parsa Roshanak (iparsw) ",
     author_email="parsaroshanak@gmail.com",
     long_description=long_description,
