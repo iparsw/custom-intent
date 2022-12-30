@@ -62,15 +62,17 @@ class ChatBot:
                 learning_rate = 0.00025
             elif model_type == "l4":
                 learning_rate = 0.0002
-            elif model_type == "l5" or model_type == "l5f":
+            elif model_type == "l5" or model_type == "l5f" or model_type == "xl1" or model_type == "xl2":
                 learning_rate = 0.0001
             else:
                 learning_rate = 0.01
 
         # defualt epoch
         if epoch is None:
-            if model_type == "l1":
+            if model_type == "l1" or model_type == "xs2" or model_type == "s1" or model_type == "s2" or model_type == "s3":
                 epoch = 200
+            elif model_type == "xl2":
+                epoch = 700
             elif model_type == "l3" or model_type == "l5f":
                 epoch = 1000
             elif model_type == "l4" or model_type == "l5":
@@ -269,7 +271,7 @@ class ChatBot:
             self.model.add(Dense(16, activation='relu'))
             self.model.add(Dropout(0.5))
             self.model.add(Dense(len(train_y[0]), activation='softmax'))
-        # l5
+        # l5 model
         elif model_type == "l5" or model_type == "l5f":
             self.model = Sequential()
             self.model.add(Dense(512, input_shape=(len(train_x[0]),), activation='relu'))
@@ -281,6 +283,44 @@ class ChatBot:
             self.model.add(Dense(128, activation='relu'))
             self.model.add(Dropout(0.5))
             self.model.add(Dense(64, activation='relu'))
+            self.model.add(Dense(len(train_y[0]), activation='softmax'))
+        # xl1 model
+        elif model_type == "xl1":
+            self.model = Sequential()
+            self.model.add(Dense(1024, input_shape=(len(train_x[0]),), activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(512, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(256, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(len(train_y[0]), activation='softmax'))
+        # xl2 model
+        elif model_type == "xl2":
+            self.model = Sequential()
+            self.model.add(Dense(1024, input_shape=(len(train_x[0]),), activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(512, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(256, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(128, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(len(train_y[0]), activation='softmax'))
+        # xl3 model
+        elif model_type == "xl3":
+            self.model = Sequential()
+            self.model.add(Dense(1024, input_shape=(len(train_x[0]),), activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(512, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(256, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(128, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(64, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(32, activation='relu'))
+            self.model.add(Dropout(0.5))
             self.model.add(Dense(len(train_y[0]), activation='softmax'))
         # defining layers end
         # printing summery
