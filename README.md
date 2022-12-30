@@ -1,7 +1,7 @@
 
 # Custom Intents
 
-V0.1.0
+V0.1.2
 
 Really high level API to create simple chat bots in few lines of code
 
