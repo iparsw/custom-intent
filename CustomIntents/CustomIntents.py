@@ -1,3 +1,4 @@
+import tensorflow as tf
 import random
 import json
 import pickle
@@ -5,6 +6,7 @@ import numpy as np
 import os
 from time import perf_counter
 from collections import OrderedDict
+from pathlib import Path
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -12,16 +14,21 @@ import nltk
 from nltk.stem import WordNetLemmatizer
 
 from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers import Dense, Dropout, Embedding, GlobalAveragePooling1D
+from tensorflow.python.keras.layers import Dense, Dropout, Embedding, GlobalAveragePooling1D, MaxPooling2D, Flatten, \
+    Conv2D
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.optimizer_v2.adamax import Adamax
 from tensorflow.python.keras.optimizer_v2.adagrad import Adagrad
+from tensorflow.python.keras.metrics import Precision, Recall, BinaryAccuracy
 
 import wandb
 from wandb.keras import WandbCallback
 import matplotlib.pyplot as plt
+
+import cv2
+import imghdr
 
 nltk.download('punkt', quiet=True)
 nltk.download('wordnet', quiet=True)
@@ -353,29 +360,20 @@ class ChatBot:
         # training start
         # SGD optimizer
         if optimizer == "SGD":
-            sgd = SGD(learning_rate=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
-            self.model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
-            self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
-                                       verbose=1, validation_split=validation_split, callbacks=call_back_list)
-
+            opt = SGD(learning_rate=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
         # Adama optimizer
         elif optimizer == "Adam":
-            adam = Adam(learning_rate=learning_rate)
-            self.model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-            self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
-                                       verbose=1, validation_split=validation_split, callbacks=call_back_list)
+            opt = Adam(learning_rate=learning_rate)
         # Adamax optimizer
         elif optimizer == "Adamx":
-            adamx = Adamax(learning_rate=learning_rate)
-            self.model.compile(loss='categorical_crossentropy', optimizer=adamx, metrics=['accuracy'])
-            self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
-                                       verbose=1, validation_split=validation_split, callbacks=call_back_list)
+            opt = Adamax(learning_rate=learning_rate)
         # Adagrad optimizer
         elif optimizer == "Adagrad":
-            adagrad = Adagrad(learning_rate=learning_rate)
-            self.model.compile(loss='categorical_crossentropy', optimizer=adagrad, metrics=['accuracy'])
-            self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
-                                       verbose=1, validation_split=validation_split, callbacks=call_back_list)
+            opt = Adagrad(learning_rate=learning_rate)
+
+        self.model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+        self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
+                                   verbose=1, validation_split=validation_split, callbacks=call_back_list)
         # training ends
         # training info
         if accuracy_and_loss_plot:
@@ -408,7 +406,7 @@ class ChatBot:
             plt.grid()
             plt.legend(loc="lower right")
             plt.show()
-        # time 
+        # time
         if timeIt:
             print(f"training time in sec : {perf_counter() - start_time}")
             print(f"training time in min : {(perf_counter() - start_time) / 60}")
@@ -658,3 +656,150 @@ class JsonIntents:
             out_file.close()
             print("new tag added !")
             self.load_json_intents(self.json_file_adress)
+
+
+class BinaryImageClassificate:
+    def __init__(self, data_folder="data", model_name="imageclassification_model", first_class="1", second_class="2"):
+        self.first_class = first_class
+        self.second_class = second_class
+        self.tensorboard_callback = None
+        self.logdir = None
+        self.model = None
+        self.batch = None
+        self.test = None
+        self.val = None
+        self.train = None
+        self.test_size = None
+        self.val_size = None
+        self.train_size = None
+        self.data_iterator = None
+        self.hist = None
+        self.data_forlder = data_folder
+        self.name = model_name
+        self.data = None
+
+    def remove_dogy_images(self):
+        data_dir = self.data_forlder
+        image_exts = ['jpeg', 'jpg', 'bmp', 'png']
+        for image_class in os.listdir(data_dir):
+            for image in os.listdir(os.path.join(data_dir, image_class)):
+                image_path = os.path.join(data_dir, image_class, image)
+                try:
+                    img = cv2.imread(image_path)
+                    tip = imghdr.what(image_path)
+                    if tip not in image_exts:
+                        print('Image not in ext list {}'.format(image_path))
+                        os.remove(image_path)
+                except Exception as e:
+                    print('Issue with image {}'.format(image_path))
+                    os.remove(image_path)
+
+    def load_data(self):
+        self.data = tf.keras.utils.image_dataset_from_directory(self.data_forlder)
+        self.data_iterator = self.data.as_numpy_iterator()
+        self.batch = self.data_iterator.next()
+
+    def scale_data(self):
+        self.data = self.data.map(lambda x, y: (x / 255, y))
+
+    def split_data(self):
+        self.train_size = int(len(self.data) * .7)
+        self.val_size = int(len(self.data) * .2)
+        self.test_size = int(len(self.data) * .1)
+        self.train = self.data.take(self.train_size)
+        self.val = self.data.skip(self.train_size).take(self.val_size)
+        self.test = self.data.skip(self.train_size + self.val_size).take(self.test_size)
+
+    def build_model(self, model_type="s1"):
+        if model_type == "s1":
+            self.model = Sequential()
+            self.model.add(Conv2D(16, (3, 3), 1, activation='relu', input_shape=(256, 256, 3)))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(32, (3, 3), 1, activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(16, (3, 3), 1, activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Flatten())
+            self.model.add(Dense(256, activation='relu'))
+            self.model.add(Dense(1, activation='sigmoid'))
+            self.model.compile('adam', loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
+            print(self.model.summary())
+
+    def seting_logdir(self):
+        current_dir = os.getcwd()
+        parent_dir = os.path.dirname(current_dir)
+        if self.logdir is None:
+            if Path('new_folder').is_dir():
+                self.logdir = "logs"
+            else:
+                path = os.path.join(parent_dir, "logs")
+                os.mkdir(path)
+                self.logdir = "logs"
+        else:
+            if Path(self.logdir).is_dir():
+                pass
+            else:
+                path = os.path.join(parent_dir, self.logdir)
+                os.mkdir(path)
+
+    def train_model(self, epochs=20, model_type="s1", logdir=None):
+        self.oom_avoider()
+        self.remove_dogy_images()
+        self.load_data()
+        self.scale_data()
+        self.split_data()
+        self.build_model()
+        self.logdir = logdir
+        self.seting_logdir()
+        self.build_model(model_type=model_type)
+        self.tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=self.logdir)
+        self.hist = self.model.fit(self.train, epochs=epochs, validation_data=self.val, callbacks=[self.tensorboard_callback])
+        self.plot_acc()
+        self.plot_loss()
+
+    def plot_loss(self):
+        fig = plt.figure()
+        plt.plot(self.hist.history['loss'], color='teal', label='loss')
+        plt.plot(self.hist.history['val_loss'], color='orange', label='val_loss')
+        fig.suptitle('Loss', fontsize=20)
+        plt.legend(loc="upper left")
+        plt.show()
+
+    def plot_acc(self):
+        fig = plt.figure()
+        plt.plot(self.hist.history['accuracy'], color='teal', label='accuracy')
+        plt.plot(self.hist.history['val_accuracy'], color='orange', label='val_accuracy')
+        fig.suptitle('Accuracy', fontsize=20)
+        plt.legend(loc="upper left")
+        plt.show()
+
+    def save_model(self, model_file_name=None):
+        if model_file_name is None:
+            model_file_name = self.name
+        self.model.save(os.path.join('models', f'{model_file_name}.h5'))
+
+    def load_model(self, name="imageclassification_model"):
+        self.model = load_model(f'{name}.h5')
+
+    @staticmethod
+    def oom_avoider():
+        gpus = tf.config.experimental.list_physical_devices('GPU')
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+
+    def predict_from_files_path(self, image_file_path):
+        img = cv2.imread(image_file_path)
+        resize = tf.image.resize(img, (256, 256))
+        yhat = self.model.predict(np.expand_dims(resize/255, 0))
+        if yhat > 0.5:
+            return self.first_class
+        else:
+            return self.second_class
+
+    def predict_from_imshow(self, img):
+        resize = tf.image.resize(img, (256, 256))
+        yhat = self.model.predict(np.expand_dims(resize / 255, 0))
+        if yhat > 0.5:
+            return self.first_class
+        else:
+            return self.second_class
