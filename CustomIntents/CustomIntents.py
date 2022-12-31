@@ -325,6 +325,10 @@ class ChatBot:
         # defining layers end
         # printing summery
         print(self.model.summary())
+        print(f"learning rate : {learning_rate}")
+        print(f"epoch : {epoch}")
+        print(f"validation split : {validation_split}")
+        print(f"batch size : {batch_size}")
         # callbacks define
         call_back_list = []
         # wheight and biases config
