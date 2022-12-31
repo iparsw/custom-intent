@@ -69,7 +69,7 @@ class ChatBot:
 
         # defualt epoch
         if epoch is None:
-            if model_type == "l1" or model_type == "xs2" or model_type == "s1" or model_type == "s2" or model_type == "s3":
+            if model_type == "l1" or model_type == "xs2" or model_type == "s1" or model_type == "s2" or model_type == "s3" or model_type == "m1":
                 epoch = 200
             elif model_type == "xl2":
                 epoch = 700
