@@ -711,6 +711,7 @@ class BinaryImageClassificate:
         self.test = self.data.skip(self.train_size + self.val_size).take(self.test_size)
 
     def build_model(self, model_type="s1"):
+        print(f"model type : {model_type}")
         if model_type == "s1":
             self.model = Sequential()
             self.model.add(Conv2D(16, (3, 3), 1, activation='relu', input_shape=(256, 256, 3)))
@@ -723,7 +724,20 @@ class BinaryImageClassificate:
             self.model.add(Dense(256, activation='relu'))
             self.model.add(Dense(1, activation='sigmoid'))
             self.model.compile('adam', loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
-            print(self.model.summary())
+        elif model_type == "s2":
+            self.model = Sequential()
+            self.model.add(Conv2D(16, (3, 3), 1, activation='relu', input_shape=(256, 256, 3)))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(32, (3, 3), 1, activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(32, (3, 3), 1, activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Flatten())
+            self.model.add(Dense(256, activation='relu'))
+            self.model.add(Dense(1, activation='sigmoid'))
+            self.model.compile('adam', loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
+
+        print(self.model.summary())
 
     def seting_logdir(self):
         current_dir = os.getcwd()
@@ -748,12 +762,12 @@ class BinaryImageClassificate:
         self.load_data()
         self.scale_data()
         self.split_data()
-        self.build_model()
         self.logdir = logdir
         self.seting_logdir()
         self.build_model(model_type=model_type)
         self.tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=self.logdir)
-        self.hist = self.model.fit(self.train, epochs=epochs, validation_data=self.val, callbacks=[self.tensorboard_callback])
+        self.hist = self.model.fit(self.train, epochs=epochs, validation_data=self.val,
+                                   callbacks=[self.tensorboard_callback])
         self.plot_acc()
         self.plot_loss()
 
@@ -763,6 +777,7 @@ class BinaryImageClassificate:
         plt.plot(self.hist.history['val_loss'], color='orange', label='val_loss')
         fig.suptitle('Loss', fontsize=20)
         plt.legend(loc="upper left")
+        plt.grid()
         plt.show()
 
     def plot_acc(self):
@@ -771,6 +786,7 @@ class BinaryImageClassificate:
         plt.plot(self.hist.history['val_accuracy'], color='orange', label='val_accuracy')
         fig.suptitle('Accuracy', fontsize=20)
         plt.legend(loc="upper left")
+        plt.grid()
         plt.show()
 
     def save_model(self, model_file_name=None):
@@ -790,7 +806,7 @@ class BinaryImageClassificate:
     def predict_from_files_path(self, image_file_path):
         img = cv2.imread(image_file_path)
         resize = tf.image.resize(img, (256, 256))
-        yhat = self.model.predict(np.expand_dims(resize/255, 0))
+        yhat = self.model.predict(np.expand_dims(resize / 255, 0))
         if yhat > 0.5:
             return self.first_class
         else:
