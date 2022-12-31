@@ -1,12 +1,11 @@
 
 # Custom Intents
 
-V0.2.0
+V0.3.0
 
-A package build on top of keras for creating and training deep learning chat bots (text classification) in just three lines of code 
+A package build on top of keras for creating and training deep learning chat bots (text classification) and binary image classification in just three lines of code 
 
-the package is inspired by NeuralNine, neuralintents
-package 
+the package is inspired by NeuralNine, neuralintents package a packege that let you build chatbot models with 3 lines of code
 
 ## Setting Up A Basic Chatbot
 
