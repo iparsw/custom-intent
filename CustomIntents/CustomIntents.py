@@ -15,9 +15,13 @@ from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense, Dropout, Embedding, GlobalAveragePooling1D
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.models import load_model
+from tensorflow.python.keras.optimizer_v2.adam import Adam
+from tensorflow.python.keras.optimizer_v2.adamax import Adamax
+from tensorflow.python.keras.optimizer_v2.adagrad import Adagrad
 
 import wandb
 from wandb.keras import WandbCallback
+import matplotlib.pyplot as plt
 
 nltk.download('punkt', quiet=True)
 nltk.download('wordnet', quiet=True)
@@ -46,12 +50,15 @@ class ChatBot:
         self.intents = json.loads(open(intents).read())
 
     def train_model(self, epoch=None, batch_size=5, learning_rate=None, ignore_letters=None, timeIt=True,
-                    model_type='s1', validation_split=0):
+                    model_type='s1', validation_split=0, optimizer=None, accuracy_and_loss_plot=True):
         start_time = perf_counter()
-
+        # defualt optimizer
+        if optimizer is None:
+            optimizer = "Adam"
         # defualt learning_rate
-
+        learning_rate_is_defualt = False
         if learning_rate is None:
+            learning_rate_is_defualt = True
             if model_type == "m2" or model_type == "s2" or model_type == "l1":
                 learning_rate = 0.005
             elif model_type == "m3" or model_type == "s5" or model_type == "s4" or model_type == "s3":
@@ -66,6 +73,8 @@ class ChatBot:
                 learning_rate = 0.0001
             else:
                 learning_rate = 0.01
+        if learning_rate_is_defualt and optimizer == "Adamgrad":
+            learning_rate = learning_rate * 50
 
         # defualt epoch
         if epoch is None:
@@ -329,6 +338,7 @@ class ChatBot:
         print(f"epoch : {epoch}")
         print(f"validation split : {validation_split}")
         print(f"batch size : {batch_size}")
+        print(f"optimizer : {optimizer}")
         # callbacks define
         call_back_list = []
         # wheight and biases config
@@ -341,12 +351,64 @@ class ChatBot:
             call_back_list.append(WandbCallback())
 
         # training start
-        sgd = SGD(learning_rate=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
-        self.model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
-        self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
-                                   verbose=1, validation_split=validation_split, callbacks=call_back_list)
-        # training ends
+        # SGD optimizer
+        if optimizer == "SGD":
+            sgd = SGD(learning_rate=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
+            self.model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+            self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
+                                       verbose=1, validation_split=validation_split, callbacks=call_back_list)
 
+        # Adama optimizer
+        elif optimizer == "Adam":
+            adam = Adam(learning_rate=learning_rate)
+            self.model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
+            self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
+                                       verbose=1, validation_split=validation_split, callbacks=call_back_list)
+        # Adamax optimizer
+        elif optimizer == "Adamx":
+            adamx = Adamax(learning_rate=learning_rate)
+            self.model.compile(loss='categorical_crossentropy', optimizer=adamx, metrics=['accuracy'])
+            self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
+                                       verbose=1, validation_split=validation_split, callbacks=call_back_list)
+        # Adagrad optimizer
+        elif optimizer == "Adagrad":
+            adagrad = Adagrad(learning_rate=learning_rate)
+            self.model.compile(loss='categorical_crossentropy', optimizer=adagrad, metrics=['accuracy'])
+            self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
+                                       verbose=1, validation_split=validation_split, callbacks=call_back_list)
+        # training ends
+        # training info
+        if accuracy_and_loss_plot:
+            history_dict = self.hist.history
+            f_acc = history_dict['accuracy']
+            f_loss = history_dict['loss']
+            f_epochs = range(1, len(f_acc) + 1)
+            plt.plot(f_epochs, f_loss, "b", label="Training los")
+            f_val_acc = None
+            if validation_split != 0:
+                f_val_acc = history_dict['val_accuracy']
+                f_val_loss = history_dict['val_loss']
+                plt.plot(f_epochs, f_val_loss, 'r', label="Validation loss")
+                plt.title('Training and validation loss')
+            else:
+                plt.title('Training loss')
+            plt.xlabel('Epochs')
+            plt.ylabel('Loss')
+            plt.grid()
+            plt.legend()
+            plt.show()
+            plt.plot(f_epochs, f_acc, 'b', label="Training acc")
+            if validation_split != 0:
+                plt.plot(f_epochs, f_val_acc, 'r', label="Validation acc")
+                plt.title("Training and validation accuracy")
+            else:
+                plt.title("Training accuracy")
+            plt.xlabel('Epochs')
+            plt.ylabel('Accuracy')
+            plt.grid()
+            plt.legend(loc="lower right")
+            plt.show()
+        # time 
         if timeIt:
             print(f"training time in sec : {perf_counter() - start_time}")
             print(f"training time in min : {(perf_counter() - start_time) / 60}")

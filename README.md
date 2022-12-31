@@ -1,9 +1,9 @@
 
 # Custom Intents
 
-V0.1.2
+V0.2.0
 
-Really high level API to create simple chat bots in few lines of code
+A package build on top of keras for creating and training deep learning chat bots (text classification) in just three lines of code 
 
 the package is inspired by NeuralNine, neuralintents
 package 
