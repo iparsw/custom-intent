@@ -1,12 +1,13 @@
-import tensorflow as tf
-import random
 import json
-import pickle
-import numpy as np
 import os
-from time import perf_counter
+import pickle
+import random
 from collections import OrderedDict
 from pathlib import Path
+from time import perf_counter
+
+import numpy as np
+import tensorflow as tf
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -14,7 +15,7 @@ import nltk
 from nltk.stem import WordNetLemmatizer
 
 from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers import Dense, Dropout, Embedding, GlobalAveragePooling1D, MaxPooling2D, Flatten, \
+from tensorflow.python.keras.layers import Dense, Dropout, MaxPooling2D, Flatten, \
     Conv2D
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.models import load_model
@@ -34,10 +35,24 @@ nltk.download('punkt', quiet=True)
 nltk.download('wordnet', quiet=True)
 
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 class ChatBot:
 
     def __init__(self, intents, intent_methods={}, model_name="assistant_model", threshold=0.25, w_and_b=False,
                  tensorboard=False):
+        self.words = None
+        self.classes = None
         self.hist = None
         self.intents = intents
         self.intent_methods = intent_methods
@@ -53,17 +68,49 @@ class ChatBot:
         if tensorboard:
             pass
 
-    def load_json_intents(self, intents):
+    def load_json_intents(self, intents: str):
         self.intents = json.loads(open(intents).read())
 
     def train_model(self, epoch=None, batch_size=5, learning_rate=None, ignore_letters=None, timeIt=True,
                     model_type='s1', validation_split=0, optimizer=None, accuracy_and_loss_plot=True):
         start_time = perf_counter()
+
+        # ckeing for right types of input
+        # validation split
+        if type(validation_split) is not int:
+            print(f"{bcolors.FAIL}validation split should be an int ! \n"
+                  f"it will defualt to 0{bcolors.ENDC}")
+            validation_split = 0
+        else:
+            if validation_split < 0 or validation_split >= 1:
+                print(f"{bcolors.FAIL}validation split should be beetwen 0 and 1\n"
+                      f"it will defualt to 0 {bcolors.ENDC}")
+        # ignore letters
+        if type(ignore_letters) is not list:
+            print(f"{bcolors.FAIL}ignore letters should be a list of letters you want to ignore\n"
+                  f"it will set to defualt (['!', '?', ',', '.']){bcolors.ENDC}")
+        # batch size
+        if type(batch_size) is not int:
+            print(f"{bcolors.FAIL}batch size should be an int\n"
+                  f"it will set to defualt (5){bcolors.ENDC}")
+        # timeIt
+        if type(timeIt) is not bool:
+            print(f"{bcolors.FAIL}timeIt should be a bool\n"
+                  f"it will set to defualt (True)")
+        # accuracy and loss plot
+        if type(accuracy_and_loss_plot) is not bool:
+            print(f"{bcolors.FAIL}accuracy_and_loss_plot should be a bool\n"
+                  f"it will set to defualt (True)")
+
         # defualt optimizer
         if optimizer is None:
             optimizer = "Adam"
         # defualt learning_rate
         learning_rate_is_defualt = False
+        if type(learning_rate) is int and learning_rate is not None:
+            print(f"{bcolors.FAIL}learning rate should be an int\n"
+                  f"it will defualt to defualt learning rate of the selected mdel{bcolors.ENDC}")
+            learning_rate = None
         if learning_rate is None:
             learning_rate_is_defualt = True
             if model_type == "m2" or model_type == "s2" or model_type == "l1":
@@ -84,6 +131,10 @@ class ChatBot:
             learning_rate = learning_rate * 50
 
         # defualt epoch
+        if type(epoch) is not int and epoch is not None:
+            print(f"{bcolors.FAIL}epochs should be an int\n"
+                  f"it will defualt to defualt epoch of the selected mdel{bcolors.ENDC}")
+            epoch = None
         if epoch is None:
             if model_type == "l1" or model_type == "xs2" or model_type == "s1" or model_type == "s2" or model_type == "s3" or model_type == "m1" or model_type == "m2":
                 epoch = 200
@@ -95,6 +146,7 @@ class ChatBot:
                 epoch = 2000
             else:
                 epoch = 500
+
         if ignore_letters is None:
             ignore_letters = ['!', '?', ',', '.']
         self.words = []
@@ -338,14 +390,18 @@ class ChatBot:
             self.model.add(Dense(32, activation='relu'))
             self.model.add(Dropout(0.5))
             self.model.add(Dense(len(train_y[0]), activation='softmax'))
+        # undifined model
+        else:
+            print(f"{bcolors.FAIL}model {model_type} is undifinde\n"
+                  f"it will defuat to s1 {bcolors.ENDC}")
+            self.model = Sequential()
+            self.model.add(Dense(128, input_shape=(len(train_x[0]),), activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(64, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(len(train_y[0]), activation='softmax'))
         # defining layers end
-        # printing summery
-        print(self.model.summary())
-        print(f"learning rate : {learning_rate}")
-        print(f"epoch : {epoch}")
-        print(f"validation split : {validation_split}")
-        print(f"batch size : {batch_size}")
-        print(f"optimizer : {optimizer}")
+
         # callbacks define
         call_back_list = []
         # wheight and biases config
@@ -370,12 +426,24 @@ class ChatBot:
         # Adagrad optimizer
         elif optimizer == "Adagrad":
             opt = Adagrad(learning_rate=learning_rate)
+        else:
+            print(f"{bcolors.FAIL}the optimizer {optimizer} is unknown \n"
+                  f"it will defualt to Adam optimizer{bcolors.ENDC}")
+            opt = Adam(learning_rate=learning_rate)
+
+        # printing summery
+        print(self.model.summary())
+        print(f"learning rate : {learning_rate}")
+        print(f"epoch : {epoch}")
+        print(f"validation split : {validation_split}")
+        print(f"batch size : {batch_size}")
+        print(f"optimizer : {optimizer}")
 
         self.model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
         self.hist = self.model.fit(np.array(train_x), np.array(train_y), epochs=epoch, batch_size=batch_size,
                                    verbose=1, validation_split=validation_split, callbacks=call_back_list)
         # training ends
-        # training info
+        # training info plot
         if accuracy_and_loss_plot:
             history_dict = self.hist.history
             f_acc = history_dict['accuracy']
@@ -410,6 +478,7 @@ class ChatBot:
         if timeIt:
             print(f"training time in sec : {perf_counter() - start_time}")
             print(f"training time in min : {(perf_counter() - start_time) / 60}")
+            print(f"training time in hour : {(perf_counter() - start_time) / 3600}")
 
     def save_model(self, model_name=None):
         if model_name is None:
@@ -458,6 +527,7 @@ class ChatBot:
             return_list.append({'intent': self.classes[r[0]], 'probability': str(r[1])})
         return return_list
 
+    @staticmethod
     def _get_response(self, ints, intents_json):
         try:
             tag = ints[0]['intent']
@@ -470,7 +540,9 @@ class ChatBot:
             result = "I don't understand!"
         return result
 
-    def _get_tag(self, ints, intents_json):
+    @staticmethod
+    def _get_tag(ints, intents_json):
+        result = None
         try:
             tag = ints[0]['intent']
             list_of_intents = intents_json['intents']
@@ -660,6 +732,9 @@ class JsonIntents:
 
 class BinaryImageClassificate:
     def __init__(self, data_folder="data", model_name="imageclassification_model", first_class="1", second_class="2"):
+        self.acc = None
+        self.re = None
+        self.pre = None
         self.first_class = first_class
         self.second_class = second_class
         self.tensorboard_callback = None
@@ -712,6 +787,7 @@ class BinaryImageClassificate:
 
     def build_model(self, model_type="s1"):
         print(f"model type : {model_type}")
+        succsesful = True
         if model_type == "s1":
             self.model = Sequential()
             self.model.add(Conv2D(16, (3, 3), 1, activation='relu', input_shape=(256, 256, 3)))
@@ -736,8 +812,13 @@ class BinaryImageClassificate:
             self.model.add(Dense(256, activation='relu'))
             self.model.add(Dense(1, activation='sigmoid'))
             self.model.compile('adam', loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
-
-        print(self.model.summary())
+        else:
+            print(f"{bcolors.FAIL}model {model_type} is undifinde\n"
+                  f"it will defuat to s1 {bcolors.ENDC}")
+            self.build_model(model_type="s1")
+            succsesful = False
+        if succsesful:
+            print(self.model.summary())
 
     def seting_logdir(self):
         current_dir = os.getcwd()
@@ -757,6 +838,10 @@ class BinaryImageClassificate:
                 os.mkdir(path)
 
     def train_model(self, epochs=20, model_type="s1", logdir=None):
+        if type(epochs) is not int:
+            print(f"{bcolors.FAIL}epochs should be an int\n"
+                  f"it will defualt to 20{bcolors.ENDC}")
+            epochs = 20
         self.oom_avoider()
         self.remove_dogy_images()
         self.load_data()
@@ -792,7 +877,7 @@ class BinaryImageClassificate:
     def save_model(self, model_file_name=None):
         if model_file_name is None:
             model_file_name = self.name
-        self.model.save(os.path.join('models', f'{model_file_name}.h5'))
+        self.model.save(f'{model_file_name}.h5')
 
     def load_model(self, name="imageclassification_model"):
         self.model = load_model(f'{name}.h5')
@@ -819,3 +904,15 @@ class BinaryImageClassificate:
             return self.first_class
         else:
             return self.second_class
+
+    def evaluate_model(self):
+        self.pre = Precision()
+        self.re = Recall()
+        self.acc = BinaryAccuracy()
+        for batch in self.test.as_numpy_iterator():
+            X, y = batch
+            yhat = self.model.predict(X)
+            self.pre.update_state(y, yhat)
+            self.re.update_state(y, yhat)
+            self.acc.update_state(y, yhat)
+        return [self.pre.result(), self.re.result(), self.acc.result()]
