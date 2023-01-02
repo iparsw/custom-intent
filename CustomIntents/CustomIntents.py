@@ -732,6 +732,7 @@ class JsonIntents:
 
 class BinaryImageClassificate:
     def __init__(self, data_folder="data", model_name="imageclassification_model", first_class="1", second_class="2"):
+        self.optimizer = None
         self.acc = None
         self.re = None
         self.pre = None
@@ -785,7 +786,7 @@ class BinaryImageClassificate:
         self.val = self.data.skip(self.train_size).take(self.val_size)
         self.test = self.data.skip(self.train_size + self.val_size).take(self.test_size)
 
-    def build_model(self, model_type="s1"):
+    def build_model(self, optimizer, model_type="s1"):
         print(f"model type : {model_type}")
         succsesful = True
         if model_type == "s1":
@@ -799,7 +800,7 @@ class BinaryImageClassificate:
             self.model.add(Flatten())
             self.model.add(Dense(256, activation='relu'))
             self.model.add(Dense(1, activation='sigmoid'))
-            self.model.compile('adam', loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
+            self.model.compile(optimizer=optimizer, loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
         elif model_type == "s2":
             self.model = Sequential()
             self.model.add(Conv2D(16, (3, 3), 1, activation='relu', input_shape=(256, 256, 3)))
@@ -811,14 +812,20 @@ class BinaryImageClassificate:
             self.model.add(Flatten())
             self.model.add(Dense(256, activation='relu'))
             self.model.add(Dense(1, activation='sigmoid'))
-            self.model.compile('adam', loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
+            self.model.compile(optimizer=optimizer, loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
         else:
             print(f"{bcolors.FAIL}model {model_type} is undifinde\n"
                   f"it will defuat to s1 {bcolors.ENDC}")
-            self.build_model(model_type="s1")
+            self.build_model(model_type="s1", optimizer=optimizer)
             succsesful = False
         if succsesful:
             print(self.model.summary())
+
+    @staticmethod
+    def build_optimizer(learning_rate=0.00001, optimizer_type="adam"):
+        if optimizer_type.lower() == "adam":
+            opt = Adam(learning_rate=learning_rate)
+        return opt
 
     def seting_logdir(self):
         current_dir = os.getcwd()
@@ -837,7 +844,7 @@ class BinaryImageClassificate:
                 path = os.path.join(parent_dir, self.logdir)
                 os.mkdir(path)
 
-    def train_model(self, epochs=20, model_type="s1", logdir=None):
+    def train_model(self, epochs=20, model_type="s1", logdir=None, optimizer_type="adam"):
         if type(epochs) is not int:
             print(f"{bcolors.FAIL}epochs should be an int\n"
                   f"it will defualt to 20{bcolors.ENDC}")
@@ -849,7 +856,8 @@ class BinaryImageClassificate:
         self.split_data()
         self.logdir = logdir
         self.seting_logdir()
-        self.build_model(model_type=model_type)
+        self.optimizer = self.build_optimizer(optimizer_type=optimizer_type)
+        self.build_model(model_type=model_type, optimizer=self.optimizer)
         self.tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=self.logdir)
         self.hist = self.model.fit(self.train, epochs=epochs, validation_data=self.val,
                                    callbacks=[self.tensorboard_callback])
