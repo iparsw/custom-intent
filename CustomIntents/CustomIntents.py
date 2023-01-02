@@ -16,7 +16,7 @@ from nltk.stem import WordNetLemmatizer
 
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense, Dropout, MaxPooling2D, Flatten, \
-    Conv2D
+    Conv2D, GlobalAveragePooling2D
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras.optimizer_v2.adam import Adam
@@ -51,6 +51,7 @@ class ChatBot:
 
     def __init__(self, intents, intent_methods={}, model_name="assistant_model", threshold=0.25, w_and_b=False,
                  tensorboard=False):
+        self.model = None
         self.words = None
         self.classes = None
         self.hist = None
@@ -775,7 +776,7 @@ class BinaryImageClassificate:
         self.data_iterator = self.data.as_numpy_iterator()
         self.batch = self.data_iterator.next()
 
-    def scale_data(self):
+    def scale_data(self, model_type="s1"):
         self.data = self.data.map(lambda x, y: (x / 255, y))
 
     def split_data(self):
@@ -800,7 +801,6 @@ class BinaryImageClassificate:
             self.model.add(Flatten())
             self.model.add(Dense(256, activation='relu'))
             self.model.add(Dense(1, activation='sigmoid'))
-            self.model.compile(optimizer=optimizer, loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
         elif model_type == "s2":
             self.model = Sequential()
             self.model.add(Conv2D(16, (3, 3), 1, activation='relu', input_shape=(256, 256, 3)))
@@ -812,14 +812,45 @@ class BinaryImageClassificate:
             self.model.add(Flatten())
             self.model.add(Dense(256, activation='relu'))
             self.model.add(Dense(1, activation='sigmoid'))
-            self.model.compile(optimizer=optimizer, loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
+        elif model_type == "s3":
+            self.model = Sequential()
+            self.model.add(Conv2D(32, (3, 3), 1, activation='relu', input_shape=(256, 256, 3)))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(32, (3, 3), 1, activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(64, (3, 3), 1, activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Dropout(0.4))
+            self.model.add(Flatten())
+            self.model.add(Dense(128, activation='relu'))
+            self.model.add(Dense(1, activation='sigmoid'))
+        elif model_type == "m1":
+            self.model = Sequential()
+            self.model.add(Conv2D(32, (3, 3), 1, padding="same", activation='relu', input_shape=(256, 256, 3)))
+            self.model.add(Conv2D(32, (3, 3), 1, activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Dropout(0.25))
+
+            self.model.add(Conv2D(64, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(64, (3, 3), 1, activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Dropout(0.25))
+
+            self.model.add(Flatten())
+            self.model.add(Dense(512, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(1, activation='sigmoid'))
+
         else:
             print(f"{bcolors.FAIL}model {model_type} is undifinde\n"
                   f"it will defuat to s1 {bcolors.ENDC}")
             self.build_model(model_type="s1", optimizer=optimizer)
             succsesful = False
-        if succsesful:
+
+        if succsesful :
             print(self.model.summary())
+
+        self.model.compile(optimizer=optimizer, loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
 
     @staticmethod
     def build_optimizer(learning_rate=0.00001, optimizer_type="adam"):
@@ -852,7 +883,7 @@ class BinaryImageClassificate:
         self.oom_avoider()
         self.remove_dogy_images()
         self.load_data()
-        self.scale_data()
+        self.scale_data(model_type=model_type)
         self.split_data()
         self.logdir = logdir
         self.seting_logdir()
