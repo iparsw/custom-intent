@@ -844,7 +844,7 @@ class BinaryImageClassificate:
                 path = os.path.join(parent_dir, self.logdir)
                 os.mkdir(path)
 
-    def train_model(self, epochs=20, model_type="s1", logdir=None, optimizer_type="adam"):
+    def train_model(self, epochs=20, model_type="s1", logdir=None, optimizer_type="adam", learning_rate=0.00001):
         if type(epochs) is not int:
             print(f"{bcolors.FAIL}epochs should be an int\n"
                   f"it will defualt to 20{bcolors.ENDC}")
@@ -856,7 +856,7 @@ class BinaryImageClassificate:
         self.split_data()
         self.logdir = logdir
         self.seting_logdir()
-        self.optimizer = self.build_optimizer(optimizer_type=optimizer_type)
+        self.optimizer = self.build_optimizer(optimizer_type=optimizer_type, learning_rate=learning_rate)
         self.build_model(model_type=model_type, optimizer=self.optimizer)
         self.tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=self.logdir)
         self.hist = self.model.fit(self.train, epochs=epochs, validation_data=self.val,
