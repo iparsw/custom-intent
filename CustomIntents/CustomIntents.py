@@ -6,6 +6,7 @@ from collections import OrderedDict
 from pathlib import Path
 from time import perf_counter
 
+import keras
 import numpy as np
 import tensorflow as tf
 
@@ -14,9 +15,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import nltk
 from nltk.stem import WordNetLemmatizer
 
+from keras_preprocessing.image import img_to_array
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense, Dropout, MaxPooling2D, Flatten, \
-    Conv2D, GlobalAveragePooling2D
+    Conv2D, GlobalAveragePooling2D, Activation
+from tensorflow.python.keras import layers
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras.optimizer_v2.adam import Adam
@@ -24,20 +27,36 @@ from tensorflow.python.keras.optimizer_v2.adamax import Adamax
 from tensorflow.python.keras.optimizer_v2.adagrad import Adagrad
 from tensorflow.python.keras.metrics import Precision, Recall, BinaryAccuracy
 
+from random import random
+
 import wandb
 from wandb.keras import WandbCallback
 import matplotlib.pyplot as plt
 
-
 import imghdr
+import cv2.load_config_py2
 import cv2
 import csv
 
 from threading import Thread
 
+from functools import wraps
 
-nltk.download('punkt', quiet=True)
-nltk.download('wordnet', quiet=True)
+from numba import njit, jit
+
+
+def timeit(func):
+    @wraps(func)
+    def timeit_wrapper(*args, **kwargs):
+        start_time = perf_counter()
+        result = func(*args, **kwargs)
+        end_time = perf_counter()
+        total_time = end_time - start_time
+        # first item in the args, ie `args[0]` is `self`
+        print(f'Function {func.__name__} Took {total_time:.4f} seconds')
+        return result
+
+    return timeit_wrapper
 
 
 class bcolors:
@@ -79,8 +98,10 @@ class VideoStream:
 
 class ChatBot:
 
-    def __init__(self, intents, intent_methods={}, model_name="assistant_model", threshold=0.25, w_and_b=False,
+    def __init__(self, intents, intent_methods, model_name="assistant_model", threshold=0.25, w_and_b=False,
                  tensorboard=False):
+        nltk.download('punkt', quiet=True)
+        nltk.download('wordnet', quiet=True)
         self.model = None
         self.words = None
         self.classes = None
@@ -558,7 +579,6 @@ class ChatBot:
             return_list.append({'intent': self.classes[r[0]], 'probability': str(r[1])})
         return return_list
 
-
     def _get_response(self, ints, intents_json):
         try:
             tag = ints[0]['intent']
@@ -570,7 +590,6 @@ class ChatBot:
         except IndexError:
             result = "I don't understand!"
         return result
-
 
     def _get_tag(self, ints, intents_json):
         result = None
@@ -781,12 +800,13 @@ class BinaryImageClassificate:
         self.train_size = None
         self.data_iterator = None
         self.hist = None
-        self.data_forlder = data_folder
+        self.data_folder = data_folder
         self.name = model_name
         self.data = None
+        self.oom_avoider()
 
     def remove_dogy_images(self):
-        data_dir = self.data_forlder
+        data_dir = self.data_folder
         image_exts = ['jpeg', 'jpg', 'bmp', 'png']
         for image_class in os.listdir(data_dir):
             for image in os.listdir(os.path.join(data_dir, image_class)):
@@ -802,25 +822,83 @@ class BinaryImageClassificate:
                     os.remove(image_path)
 
     def load_data(self):
-        self.data = tf.keras.utils.image_dataset_from_directory(self.data_forlder)
+        self.data = tf.keras.utils.image_dataset_from_directory(self.data_folder)
         self.data_iterator = self.data.as_numpy_iterator()
         self.batch = self.data_iterator.next()
+        print(f"{bcolors.OKGREEN}loading data succsesfuly{bcolors.ENDC}")
 
     def scale_data(self, model_type="s1"):
         self.data = self.data.map(lambda x, y: (x / 255, y))
+        print(f"{bcolors.OKGREEN}scaling data succsesfuly{bcolors.ENDC}")
+
+    def augmanet_data(self, model_type="s1"):
+        if "a" in model_type:
+            data_augmentation = Sequential([
+                tf.keras.layers.RandomFlip(mode="horizontal"),
+                tf.keras.layers.RandomRotation((-0.3, 0.3)),
+                tf.keras.layers.RandomZoom(height_factor=(-0.1, 0.1)),
+                tf.keras.layers.RandomBrightness(factor=0.2)
+            ])
+            self.data = self.data.map(lambda x, y: (data_augmentation(x, training=True), y),
+                                      num_parallel_calls=tf.data.AUTOTUNE)
+            print(f"{bcolors.OKGREEN}augmenting data succsesfuly{bcolors.ENDC}")
 
     def split_data(self):
-        self.train_size = int(len(self.data) * .7)
+        self.train_size = int(len(self.data) * .8)
         self.val_size = int(len(self.data) * .2)
-        self.test_size = int(len(self.data) * .1)
+        self.test_size = int(len(self.data) * .0)
         self.train = self.data.take(self.train_size)
         self.val = self.data.skip(self.train_size).take(self.val_size)
         self.test = self.data.skip(self.train_size + self.val_size).take(self.test_size)
+        print(f"{bcolors.OKGREEN}spliting data succsesfuly{bcolors.ENDC}")
+
+    def prefetching_data(self):
+        self.train = self.train.prefetch(tf.data.AUTOTUNE)
+        self.val = self.val.prefetch(tf.data.AUTOTUNE)
+        self.test = self.test.prefetch(tf.data.AUTOTUNE)
+        print(f"{bcolors.OKGREEN}prefetching data succsesfuly{bcolors.ENDC}")
+
+    @staticmethod
+    def make_small_Xception_model(input_shape, num_classes=2):
+        inputs = keras.Input(shape=input_shape)
+
+        x = tf.compat.v1.keras.layers.Rescaling(1.0 / 255)(inputs)
+        x = Conv2D(128, 3, strides=2, padding="same")(x)
+        x = tf.compat.v1.keras.layers.BatchNormalization()(x)
+        x = Activation("relu")(x)
+
+        previous_block_activision = x
+        for size in [256, 512, 728]:
+            x = Activation("relu")(x)
+            x = layers.SeparableConv2D(size, 3, padding="same")(x)
+            x = tf.compat.v1.keras.layers.BatchNormalization()(x)
+            x = Activation("relu")(x)
+            x = layers.SeparableConv2D(size, 3, padding="same")(x)
+            x = tf.compat.v1.keras.layers.BatchNormalization()(x)
+            x = MaxPooling2D(3, strides=2, padding="same")(x)
+            # residual
+            residual = Conv2D(size, 1, strides=2, padding="same")(previous_block_activision)
+            x = layers.add([x, residual])
+            previous_block_activision = x
+
+        x = layers.SeparableConv2D(1024, 3, padding="same")(x)
+        x = tf.compat.v1.keras.layers.BatchNormalization()(x)
+        x = Activation("relu")(x)
+        x = GlobalAveragePooling2D()(x)
+        if num_classes == 2:
+            activision = "sigmoid"
+            units = 1
+        else:
+            activision = "softmax"
+            units = num_classes
+        x = Dropout(0.5)(x)
+        outputs = Dense(units, activation=activision)(x)
+        return keras.Model(inputs, outputs)
 
     def build_model(self, optimizer, model_type="s1"):
         print(f"model type : {model_type}")
-        succsesful = True
-        if model_type == "s1":
+        succsesful = False
+        if model_type == "s1" or model_type == "s1a":
             self.model = Sequential()
             self.model.add(Conv2D(16, (3, 3), 1, activation='relu', input_shape=(256, 256, 3)))
             self.model.add(MaxPooling2D())
@@ -831,6 +909,8 @@ class BinaryImageClassificate:
             self.model.add(Flatten())
             self.model.add(Dense(256, activation='relu'))
             self.model.add(Dense(1, activation='sigmoid'))
+            succsesful = True
+
         elif model_type == "s2":
             self.model = Sequential()
             self.model.add(Conv2D(16, (3, 3), 1, activation='relu', input_shape=(256, 256, 3)))
@@ -842,6 +922,8 @@ class BinaryImageClassificate:
             self.model.add(Flatten())
             self.model.add(Dense(256, activation='relu'))
             self.model.add(Dense(1, activation='sigmoid'))
+            succsesful = True
+
         elif model_type == "s3":
             self.model = Sequential()
             self.model.add(Conv2D(32, (3, 3), 1, activation='relu', input_shape=(256, 256, 3)))
@@ -854,23 +936,25 @@ class BinaryImageClassificate:
             self.model.add(Flatten())
             self.model.add(Dense(128, activation='relu'))
             self.model.add(Dense(1, activation='sigmoid'))
+            succsesful = True
+
         elif model_type == "m1":
             self.model = Sequential()
             self.model.add(Conv2D(32, (3, 3), 1, padding="same", activation='relu', input_shape=(256, 256, 3)))
             self.model.add(Conv2D(32, (3, 3), 1, activation='relu'))
             self.model.add(MaxPooling2D())
             self.model.add(Dropout(0.25))
-
             self.model.add(Conv2D(64, (3, 3), 1, padding="same", activation='relu'))
             self.model.add(Conv2D(64, (3, 3), 1, activation='relu'))
             self.model.add(MaxPooling2D())
             self.model.add(Dropout(0.25))
-
             self.model.add(Flatten())
             self.model.add(Dense(512, activation='relu'))
             self.model.add(Dropout(0.5))
             self.model.add(Dense(1, activation='sigmoid'))
-
+            succsesful = True
+        elif model_type == "x1":
+            self.model = self.make_small_Xception_model(input_shape=(256, 256, 3), num_classes=2)
         else:
             print(f"{bcolors.FAIL}model {model_type} is undifinde\n"
                   f"it will defuat to s1 {bcolors.ENDC}")
@@ -884,6 +968,7 @@ class BinaryImageClassificate:
 
     @staticmethod
     def build_optimizer(learning_rate=0.00001, optimizer_type="adam"):
+        opt = None
         if optimizer_type.lower() == "adam":
             opt = Adam(learning_rate=learning_rate)
         return opt
@@ -905,7 +990,8 @@ class BinaryImageClassificate:
                 path = os.path.join(parent_dir, self.logdir)
                 os.mkdir(path)
 
-    def train_model(self, epochs=20, model_type="s1", logdir=None, optimizer_type="adam", learning_rate=0.00001):
+    def train_model(self, epochs=20, model_type="s1", logdir=None, optimizer_type="adam", learning_rate=0.00001,
+                    class_weight=None, prefetching=False, plot_model=True):
         if type(epochs) is not int:
             print(f"{bcolors.FAIL}epochs should be an int\n"
                   f"it will defualt to 20{bcolors.ENDC}")
@@ -914,14 +1000,19 @@ class BinaryImageClassificate:
         self.remove_dogy_images()
         self.load_data()
         self.scale_data(model_type=model_type)
+        self.augmanet_data(model_type=model_type)
         self.split_data()
+        if prefetching:
+            self.prefetching_data()
         self.logdir = logdir
         self.seting_logdir()
         self.optimizer = self.build_optimizer(optimizer_type=optimizer_type, learning_rate=learning_rate)
         self.build_model(model_type=model_type, optimizer=self.optimizer)
+        if plot_model:
+            tf.keras.utils.plot_model(self.model, show_shapes=True, show_layer_activations=True)
         self.tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=self.logdir)
         self.hist = self.model.fit(self.train, epochs=epochs, validation_data=self.val,
-                                   callbacks=[self.tensorboard_callback])
+                                   callbacks=[self.tensorboard_callback], class_weight=class_weight)
         self.plot_acc()
         self.plot_loss()
 
@@ -946,14 +1037,14 @@ class BinaryImageClassificate:
     def save_model(self, model_file_name=None):
         if model_file_name is None:
             model_file_name = self.name
-        self.model.save(f'{model_file_name}.h5')
+        self.model.save(f"{model_file_name}.h5")
 
     def load_model(self, name="imageclassification_model"):
-        self.model = load_model(f'{name}.h5')
+        self.model = load_model(f"{name}.h5")
 
     @staticmethod
     def oom_avoider():
-        gpus = tf.config.experimental.list_physical_devices('GPU')
+        gpus = tf.config.experimental.list_physical_devices("GPU")
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
 
@@ -986,7 +1077,7 @@ class BinaryImageClassificate:
             self.acc.update_state(y, yhat)
         return [self.pre.result(), self.re.result(), self.acc.result()]
 
-    def realtime_face_prediction(self):
+    def realtime_prediction(self):
         # Variables declarations
         frame_count = 0
         last = 0
@@ -1018,6 +1109,43 @@ class BinaryImageClassificate:
         vs.stop()
         cv2.destroyAllWindows()
         print("Done")
+
+    def realtime_face_prediction(self):
+        detector = cv2.CascadeClassifier("haarcascade_frontalcatface.xml")
+        camera = cv2.VideoCapture(0)
+        # keep looping
+        while True:
+            # grab the current frame
+            (grabbed, frame) = camera.read()
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frameClone = frame.copy()
+            rects = detector.detectMultiScale(gray, scaleFactor=1.1,
+                                              minNeighbors=5, minSize=(10, 10),
+                                              flags=cv2.CASCADE_SCALE_IMAGE)
+            # loop over the face bounding boxes
+            for (fX, fY, fW, fH) in rects:
+                # extract the ROI of the face from the grayscale image,
+                # resize it to a fixed 28x28 pixels, and then prepare the
+                # ROI for classification via the CNN
+                roi = frame[fY:fY + fH, fX:fX + fW]
+                roi = cv2.resize(roi, (256, 256))
+                roi = roi.astype("float") / 255.0
+                roi = img_to_array(roi)
+                roi = np.expand_dims(roi, axis=0)
+                prediction = str(self.model.predict(roi))
+                label = prediction
+                cv2.putText(frameClone, label, (fX, fY - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+                cv2.rectangle(frameClone, (fX, fY), (fX + fW, fY + fH),
+                              (0, 0, 255), 2)
+            # show our detected faces along with smiling/not smiling labels
+            cv2.imshow("Face", frameClone)
+            # if the 'q' key is pressed, stop the loop
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+        # cleanup the camera and close any open windows
+        camera.release()
+        cv2.destroyAllWindows()
 
 
 class PLinearRegression:
@@ -1102,7 +1230,8 @@ class PLinearRegression:
         result = x * self.result_a + self.result_b
         return result
 
-    def algorythm_1(self, start_step=None, verbose=1, training_steps=10000, version1_1=False):
+    @timeit
+    def algorythm_1(self, start_step=None, verbose=1, training_steps=10000, version1_1=False, plot_result=True):
         if start_step is None:
             start_step = 0.1
         step = start_step
@@ -1124,9 +1253,42 @@ class PLinearRegression:
                 print("-----------------")
             if version1_1:
                 step *= 0.999
-        return a
+        self.result_a = a
+        self.result_b = self.y_avarage - (a * self.x_avarage)
+        print(f"a = {self.result_a}\n"
+              f"b = {self.result_b}")
+        if plot_result:
+            self.plot_prediction()
 
-    def train_model(self, algorythm="1", training_steps=10000, start_step=None, verbose=1, plot_input_data=True):
+    @timeit
+    def algorythm_2(self, training_step=10000, learning_rate=0.01, verbose=1, plot_result=True):
+        x = np.array(self.data[0])
+        y = np.array(self.data[1])
+        n_samples = len(x)
+        weight = 0
+        bias = 0
+
+        for _ in range(training_step):
+            y_pred = np.dot(x, weight) + bias
+
+            dw = np.dot(x.T, (y_pred - y)) / n_samples * 2
+            db = np.sum(y_pred - y) / n_samples * 2
+
+            weight = weight - learning_rate * dw
+            bias = bias - learning_rate * db
+            if verbose == 1:
+                print(f"a : {weight}")
+                print(f"b : {bias}")
+                print("-----------------")
+        self.result_a = float(weight)
+        self.result_b = float(bias)
+        print(f"a = {self.result_a}\n"
+              f"b = {self.result_b}")
+        if plot_result:
+            self.plot_prediction()
+
+    def train_model(self, algorythm="1", training_steps=10000, start_step=None, verbose=1, plot_input_data=True,
+                    learning_rate=0.01, plot_result=True):
         self.prepare_data()
         if plot_input_data:
             self.plot_input_data()
@@ -1135,13 +1297,26 @@ class PLinearRegression:
             version1_1 = False
             if algorythm == "1.1":
                 version1_1 = True
-            self.result_a = self.algorythm_1(start_step=start_step, verbose=verbose, training_steps=training_steps,
-                                             version1_1=version1_1)
-            self.result_b = self.y_avarage - (self.result_a * self.x_avarage)
-            print(f"Line info : {self.result_a} X + {self.result_b}")
-            self.plot_prediction()
+            self.algorythm_1(start_step=start_step, verbose=verbose,
+                             training_steps=training_steps,
+                             version1_1=version1_1, plot_result=plot_result)
             return self.result_a, self.result_b
+        elif algorythm == "2":
+            self.algorythm_2(training_step=training_steps, learning_rate=learning_rate, plot_result=plot_result)
         else:
             print(f"{bcolors.FAIL}this algorythm is not defiined !{bcolors.ENDC}")
-            return 
-        
+            return
+
+    @staticmethod
+    def data_creator_scatter(a, b, noise_range, x_range, data_number):
+        x_axes1 = []
+        for _ in range(data_number):
+            i = random() * x_range
+            x_axes1.append(i)
+
+        x_axes1 = np.array(x_axes1)
+        y_axes1 = (x_axes1 * a) + b
+
+        for i in range(len(y_axes1)):
+            y_axes1[i] = y_axes1[i] + ((random() - 0.5) * noise_range)
+        return np.array([x_axes, y_axes])
