@@ -43,6 +43,9 @@ from threading import Thread
 from functools import wraps
 
 from numba import njit, jit
+from collections import Counter
+
+import Pfunctions
 
 
 def timeit(func):
@@ -1320,3 +1323,29 @@ class PLinearRegression:
         for i in range(len(y_axes1)):
             y_axes1[i] = y_axes1[i] + ((random() - 0.5) * noise_range)
         return np.array([x_axes, y_axes])
+
+
+class PKNN:
+
+    def __init__(self, k=3):
+        self.y_train = None
+        self.x_train = None
+        self.k = k
+
+    def fit(self,x ,y):
+        self.x_train = x
+        self.y_train = y
+
+    def predict(self, x):
+        predictions = [self._predict(curent_x) for curent_x in x]
+        return predictions
+
+    def _predict(self, x):
+        # fasele
+        distances = [Pfunctions.ecualidean_distance(x, x_train1) for x_train1 in self.x_train]
+        # nazdik tarin k
+        k_indices = np.argsort(distances)[:self.k]
+        k_nearest_labels = [self.y_train[i] for i in k_indices]
+        # majority vote
+        most_common = Counter(k_nearest_labels).most_common()
+        return most_common
