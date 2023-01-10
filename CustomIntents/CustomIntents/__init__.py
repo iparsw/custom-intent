@@ -1,1 +1,4 @@
-from CustomIntents.custom_intents import ChatBot, JsonIntents, PLinearRegression, BinaryImageClassificate
+from CustomIntents.customIntents import JsonIntents, PLinearRegression, BinaryImageClassificate
+from Chatbot import ChatBot
+
+
