@@ -1,4 +1,4 @@
 from . import Pfunctions
-from Chatbot import ChatBot
-from JsonIntents import JsonIntents
-from PLinearRegression import PLinearRegression
+from CustomIntents.Chatbot import ChatBot
+from CustomIntents.JsonIntents import JsonIntents
+from CustomIntents.PLinearRegression import PLinearRegression
