@@ -1,13 +1,13 @@
 
 # Custom Intents
 
-V0.4.0
+V0.7.0
 
-A package build on top of keras for creating and training deep learning chat bots (text classification) and binary image classification in just three lines of code 
+A package build on top of keras for creating and training deep learning chatbots (text classification), binary image classification and linear regression models in just three lines of code 
 
 the package is inspired by NeuralNine, neuralintents package a packege that let you build chatbot models with 3 lines of code
 
-## Setting Up A Basic Chatbot
+### Setting Up A Basic Chatbot
 
 ```python
 from CustomIntents import ChatBot
@@ -23,12 +23,12 @@ while not done:
         assistant.request(message)
 ```
 
-## Binding Functions To Requests
+### Binding Functions To Requests
 
 this is inspired by neuralintents
 
 ```python
-from neuralintents import GenericAssistant
+from CustomIntents import ChatBot
 def function_for_greetings():
     print("You triggered the greetings intent!")
     # Some action you want to take
@@ -36,7 +36,7 @@ def function_for_stocks():
     print("You triggered the stocks intent!")
     # Some action you want to take
 mappings = {'greeting' : function_for_greetings, 'stocks' : function_for_stocks}
-assistant = GenericAssistant('intents.json', intent_methods=mappings ,model_name="test_model")
+assistant = ChatBot('intents.json', intent_methods=mappings ,model_name="test_model")
 assistant.train_model()
 assistant.save_model()
 done = False
@@ -47,7 +47,7 @@ while not done:
     else:
         assistant.request(message)
 ```
-## Sample intents.json File
+### Sample intents.json File
 ```json
 {"intents": [
   {"tag": "greeting",
@@ -69,18 +69,18 @@ while not done:
 
 # ChatBot Class
 
-the first class in CustomIntent moudle is ChatBot
-its exacly what you thing a chat bot
+the first class in CustomIntent package is ChatBot
+its exacly what you thing a chatbot
 
 ## Init arguaments
 
 ```python
-def __init__(self, intents, intent_methods={}, model_name="assistant_model", threshold=0.25, w_and_b=False,
+    def __init__(self, intents, intent_methods, model_name="assistant_model", threshold=0.25, w_and_b=False,
                  tensorboard=False):
 ```
 intents : its the path of your intents file
 
-intents_method :
+intents_method : its a dictionary of mapped functions
 
 model_name : its just the name of your model
 
@@ -96,7 +96,9 @@ you can start training your model with one function call train_model
 
 training model arguments :
 ```python
-def train_model(self, epoch=500, batch_size=5, learning_rate=None, ignore_letters=None, timeIt=True, model_type='s1', validation_split=0):
+def train_model(self, epoch=None, batch_size=5, learning_rate=None,
+                ignore_letters=None, timeIt=True, model_type='s1',
+                validation_split=0, optimizer=None, accuracy_and_loss_plot=True):
 ```
 
 epoch : an epoch basicly means training the neural network with all the training data for one cycle and this arguament says how many of this circles it will go
@@ -113,9 +115,11 @@ model_type : you can select one of the defined models (we will look at the avail
 
 validation_split : you can split a portion of your data for validation only (model will not get trained on them) it should be float between 0 and 1 (i will recommend to not create a validation split unless you have a really huge data set with lots of similar patterns)
 
+optimizer : you can choose beetwin SGD, Adam, Adamx and Adagard
+
 ## save_model
 
-it will save your model as two .pkl files and a .h5 file
+it will save your model as two .pkl files and a .h5 file (don't add .h5 or .pkl)
 
 ```python
 def save_model(self, model_name=None):
@@ -143,13 +147,17 @@ def request_tag(self, message, debug_mode=False, threshold=None):
 
 message : the actual message
 
-debug_mode : it will print every step of the procces for debuging
+debug_mode : it will print every step of the procces for debuging perpes
 
-threshold : you can set a accuracy threshold if not specified it will use the  threshold you set when initilizing the bot and if you didnt specified there either its set to 0.25 by default
+threshold : you can set a accuracy threshold if not specified it will use the threshold you set when initilizing the bot and if you didn't specified there either it is set to 0.25 by default
 
 ## request_response
 
 the same as request_tag but it will return a random response from intents
+
+```python
+def request_response(self, message, debug_mode=False, threshold=None):
+```
 
 ## model types
 
@@ -177,6 +185,7 @@ m2 : great accuracy for medium size intent files
 
 m3 : m3 to m1 is like s2 to s1 its more suited when you have smaller number of tags but hard to difrentiat
 
+l1 - l2 - l3 - l4 - l5 - xl1 - xl2 - xl3 - xl5 : are bigger models for more information read MODELS.md
 
 # JsonIntents Class
 
@@ -190,6 +199,10 @@ you just need to pass the path of the json file the function you want
 ## add_pattern_app
 
 its a function that ask you to input new patterns for tags (you can pass an especific tag to ask for that or it will cycle through them all and will go to the next tag by inputing D or d)
+
+```python
+def add_pattern_app(self, tag=None):
+```
 
 ## add_tag_app
 
@@ -214,3 +227,50 @@ file.delete_duplicate_app()
 file.add_tag_app(tag="about")
 file.add_pattern_app("about")
 ```
+
+# BinaryImageClassificate class
+
+the first class in CustomIntent package is BinaryImageClassificate
+it let you create and train deep learning image classification models with just three line of code !!
+
+## Init arguaments
+
+```python
+def __init__(self, data_folder="data", model_name="imageclassification_model",
+             first_class="1", second_class="2"):
+```
+
+data_folder : it's the path of your data folder (you should put your training images in two subfolder representing their label (class))
+
+model_name : your model's name
+
+first_class : you can name your classes so when you whant to predict it returns their name insted of 1s and 2s
+
+seccond_class : //
+
+## Training
+
+you can start training your model with one function call train_model
+
+training model arguments :
+```python
+    def train_model(self, epochs=20, model_type="s1", logdir=None,
+                    optimizer_type="adam", learning_rate=0.00001,
+                    class_weight=None, prefetching=False, plot_model=True,
+                    validation_split=0.2):
+```
+
+epoch : an epoch basicly means training the neural network with all the training data for one cycle and this arguament says how many of this circles it will go
+
+model_type : you can select one of the defined models (we will look at the available models later on)
+
+logdir : a directory to hold your tensorboard log files you can leave is empty if you dont care
+
+learning_rate : Learning rate is a hyper-parameter that controls the weights of our neural network with respect to the loss gradient. It defines how quickly the neural network updates the concepts it has learned. (in simple terms if its bigger our model learn faster but it can go of track faster)
+
+class_weight : if you have an unbalanced dataset you can path a dictionary with the weight that you what to assosiate with every class () 
+
+validation_split : you can split a portion of your data for validation only (model will not get trained on them) it should be float between 0 and 1 (i will recommend to not create a validation split unless you have a really huge data set with lots of similar patterns)
+
+optimizer_type : you can only choose adam right now
+

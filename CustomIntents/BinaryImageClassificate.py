@@ -124,9 +124,9 @@ class BinaryImageClassificate:
                                       num_parallel_calls=tf.data.AUTOTUNE)
             print(f"{bcolors.OKGREEN}augmenting data succsesfuly{bcolors.ENDC}")
 
-    def split_data(self):
-        self.train_size = int(len(self.data) * .8)
-        self.val_size = int(len(self.data) * .2)
+    def split_data(self, validation_split=0.2):
+        self.train_size = int(len(self.data) * (1 - validation_split))
+        self.val_size = int(len(self.data) * (validation_split))
         self.test_size = int(len(self.data) * .0)
         self.train = self.data.take(self.train_size)
         self.val = self.data.skip(self.train_size).take(self.val_size)
@@ -272,7 +272,7 @@ class BinaryImageClassificate:
                 os.mkdir(path)
 
     def train_model(self, epochs=20, model_type="s1", logdir=None, optimizer_type="adam", learning_rate=0.00001,
-                    class_weight=None, prefetching=False, plot_model=True):
+                    class_weight=None, prefetching=False, plot_model=True, validation_split=0.2):
         if type(epochs) is not int:
             print(f"{bcolors.FAIL}epochs should be an int\n"
                   f"it will defualt to 20{bcolors.ENDC}")
@@ -282,7 +282,7 @@ class BinaryImageClassificate:
         self.load_data()
         self.scale_data(model_type=model_type)
         self.augmanet_data(model_type=model_type)
-        self.split_data()
+        self.split_data(validation_split=validation_split)
         if prefetching:
             self.prefetching_data()
         self.logdir = logdir
