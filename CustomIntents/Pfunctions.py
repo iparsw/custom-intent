@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import cmath
 from matplotlib import rcParams
 from numpy import pi
+from time import perf_counter
 
 sys.setrecursionlimit(100_000)
 

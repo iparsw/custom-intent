@@ -61,7 +61,7 @@ class VideoStream:
         self.stopped = True
 
 
-class BinaryImageClassificate:
+class BinaryImageClassificator:
     def __init__(self, data_folder="data", model_name="imageclassification_model", first_class="1", second_class="2"):
         self.optimizer = None
         self.acc = None
