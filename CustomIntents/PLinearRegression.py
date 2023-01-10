@@ -6,7 +6,7 @@ import numpy as np
 from random import random
 import matplotlib.pyplot as plt
 import csv
-from Pfunctions import ecualidean_distance, Ptimeit
+from CustomIntents.Pfunctions import ecualidean_distance, Ptimeit
 
 
 class PLinearRegression:

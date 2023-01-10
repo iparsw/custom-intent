@@ -8,7 +8,6 @@ import tensorflow as tf
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-
 from keras_preprocessing.image import img_to_array
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense, Dropout, MaxPooling2D, Flatten, \
@@ -21,7 +20,6 @@ from tensorflow.python.keras.optimizer_v2.adamax import Adamax
 from tensorflow.python.keras.optimizer_v2.adagrad import Adagrad
 from tensorflow.python.keras.metrics import Precision, Recall, BinaryAccuracy
 
-
 import wandb
 from wandb.keras import WandbCallback
 import matplotlib.pyplot as plt
@@ -33,7 +31,9 @@ from threading import Thread
 
 from functools import wraps
 
-from Bcolor import bcolors
+from CustomIntents.Bcolor import bcolors
+
+import pkg_resources
 
 
 class VideoStream:
@@ -392,7 +392,8 @@ class BinaryImageClassificate:
         print("Done")
 
     def realtime_face_prediction(self):
-        detector = cv2.CascadeClassifier("haarcascade_frontalcatface.xml")
+        haar_cascade_file = pkg_resources.resource_filename(__name__, "cascades/haarcascade_frontalcatface.xml")
+        detector = cv2.CascadeClassifier(haar_cascade_file)
         camera = cv2.VideoCapture(0)
         # keep looping
         while True:

@@ -12,6 +12,8 @@ setuptools.setup(
     url="https://github.com/iparsw/custom-intent.git",
     packages=["CustomIntents"],
     python_requires='>=3.9, <3.11',
+    include_package_data=True,
+    package_data={'': ["cascades/haarcascade_frontalcatface.xml"]},
     install_requires=[
         "gmpy2==2.1.5",
         "keras==2.10.0",
