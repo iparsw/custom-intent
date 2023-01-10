@@ -1,50 +1,11 @@
 import json
 import os
-import pickle
-import random
-from collections import OrderedDict
 from pathlib import Path
 from time import perf_counter
-
-import keras
 import numpy as np
-import tensorflow as tf
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
-import nltk
-from nltk.stem import WordNetLemmatizer
-
-from keras_preprocessing.image import img_to_array
-from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers import Dense, Dropout, MaxPooling2D, Flatten, \
-    Conv2D, GlobalAveragePooling2D, Activation
-from tensorflow.python.keras import layers
-from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
-from tensorflow.python.keras.models import load_model
-from tensorflow.python.keras.optimizer_v2.adam import Adam
-from tensorflow.python.keras.optimizer_v2.adamax import Adamax
-from tensorflow.python.keras.optimizer_v2.adagrad import Adagrad
-from tensorflow.python.keras.metrics import Precision, Recall, BinaryAccuracy
-
 from random import random
-
-import wandb
-from wandb.keras import WandbCallback
 import matplotlib.pyplot as plt
-
-import imghdr
-import cv2.load_config_py2
-import cv2
 import csv
-
-from threading import Thread
-
-from functools import wraps
-
-from numba import njit, jit
-from collections import Counter
-
 from Pfunctions import ecualidean_distance, Ptimeit
 
 
