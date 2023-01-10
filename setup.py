@@ -9,6 +9,7 @@ setuptools.setup(
     author="Parsa Roshanak (iparsw)",
     author_email="parsaroshanak@gmail.com",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     url="https://github.com/iparsw/custom-intent.git",
     packages=["CustomIntents"],
     python_requires='>=3.9, <3.11',
