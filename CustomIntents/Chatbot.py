@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 
 
 import Pfunctions
-from Bcolor import bcolors
+from CustomIntents.Bcolor import bcolors
 
 
 class ChatBot:
