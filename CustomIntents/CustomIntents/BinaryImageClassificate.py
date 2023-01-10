@@ -33,12 +33,10 @@ from threading import Thread
 
 from functools import wraps
 
-import Pfunctions
-
 from Bcolor import bcolors
 
 
-def timeit(func):
+def Ptimeit(func):
     @wraps(func)
     def timeit_wrapper(*args, **kwargs):
         start_time = perf_counter()
