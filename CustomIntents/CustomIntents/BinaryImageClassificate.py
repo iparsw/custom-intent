@@ -36,20 +36,6 @@ from functools import wraps
 from Bcolor import bcolors
 
 
-def Ptimeit(func):
-    @wraps(func)
-    def timeit_wrapper(*args, **kwargs):
-        start_time = perf_counter()
-        result = func(*args, **kwargs)
-        end_time = perf_counter()
-        total_time = end_time - start_time
-        # first item in the args, ie `args[0]` is `self`
-        print(f'Function {func.__name__} Took {total_time:.4f} seconds')
-        return result
-
-    return timeit_wrapper
-
-
 class VideoStream:
 
     def __init__(self, src=0):
