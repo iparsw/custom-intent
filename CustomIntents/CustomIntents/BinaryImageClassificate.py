@@ -1,8 +1,4 @@
-import json
 import os
-import pickle
-import random
-from collections import OrderedDict
 from pathlib import Path
 from time import perf_counter
 
@@ -12,8 +8,6 @@ import tensorflow as tf
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-import nltk
-from nltk.stem import WordNetLemmatizer
 
 from keras_preprocessing.image import img_to_array
 from tensorflow.python.keras.models import Sequential
@@ -27,23 +21,17 @@ from tensorflow.python.keras.optimizer_v2.adamax import Adamax
 from tensorflow.python.keras.optimizer_v2.adagrad import Adagrad
 from tensorflow.python.keras.metrics import Precision, Recall, BinaryAccuracy
 
-from random import random
 
 import wandb
 from wandb.keras import WandbCallback
 import matplotlib.pyplot as plt
 
 import imghdr
-import cv2.load_config_py2
 import cv2
-import csv
 
 from threading import Thread
 
 from functools import wraps
-
-from numba import njit, jit
-from collections import Counter
 
 import Pfunctions
 
