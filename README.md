@@ -266,11 +266,19 @@ model_type : you can select one of the defined models (we will look at the avail
 
 logdir : a directory to hold your tensorboard log files you can leave is empty if you dont care
 
+optimizer_type : you can only choose adam right now
+
 learning_rate : Learning rate is a hyper-parameter that controls the weights of our neural network with respect to the loss gradient. It defines how quickly the neural network updates the concepts it has learned. (in simple terms if its bigger our model learn faster but it can go of track faster)
 
 class_weight : if you have an unbalanced dataset you can path a dictionary with the weight that you what to assosiate with every class () 
 
+prefetching : prefetching data
+
+plot_model : it will plot the model architecture for you 
+
 validation_split : you can split a portion of your data for validation only (model will not get trained on them) it should be float between 0 and 1 (i will recommend to not create a validation split unless you have a really huge data set with lots of similar patterns)
 
-optimizer_type : you can only choose adam right now
+
+
+
 
