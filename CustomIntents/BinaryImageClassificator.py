@@ -334,9 +334,9 @@ class BinaryImageClassificator:
         resize = tf.image.resize(img, (256, 256))
         yhat = self.model.predict(np.expand_dims(resize / 255, 0))
         if yhat > 0.5:
-            return self.first_class
+            return self.first_class, ((yhat * 2) - 0.5) * 100
         else:
-            return self.second_class
+            return self.second_class, (1 - (yhat * 2)) * 100
 
     def predict_from_imshow(self, img):
         resize = tf.image.resize(img, (256, 256))
@@ -358,13 +358,13 @@ class BinaryImageClassificator:
             self.acc.update_state(y, yhat)
         return [self.pre.result(), self.re.result(), self.acc.result()]
 
-    def realtime_prediction(self):
+    def realtime_prediction(self, src=0):
         # Variables declarations
         frame_count = 0
         last = 0
         font = cv2.FONT_HERSHEY_TRIPLEX
         font_color = (255, 255, 255)
-        vs = VideoStream(src=0).start()
+        vs = VideoStream(src=src).start()
         while True:
             frame = vs.read()
             frame_count += 1
@@ -391,10 +391,10 @@ class BinaryImageClassificator:
         cv2.destroyAllWindows()
         print("Done")
 
-    def realtime_face_prediction(self):
+    def realtime_face_prediction(self, src=0):
         haar_cascade_file = pkg_resources.resource_filename(__name__, "cascades/haarcascade_frontalcatface.xml")
         detector = cv2.CascadeClassifier(haar_cascade_file)
-        camera = cv2.VideoCapture(0)
+        camera = cv2.VideoCapture(src)
         # keep looping
         while True:
             # grab the current frame

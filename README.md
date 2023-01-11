@@ -254,10 +254,10 @@ you can start training your model with one function call train_model
 
 training model arguments :
 ```python
-    def train_model(self, epochs=20, model_type="s1", logdir=None,
-                    optimizer_type="adam", learning_rate=0.00001,
-                    class_weight=None, prefetching=False, plot_model=True,
-                    validation_split=0.2):
+def train_model(self, epochs=20, model_type="s1", logdir=None,
+                optimizer_type="adam", learning_rate=0.00001,
+                class_weight=None, prefetching=False, plot_model=True,
+                validation_split=0.2):
 ```
 
 epoch : an epoch basicly means training the neural network with all the training data for one cycle and this arguament says how many of this circles it will go
@@ -278,7 +278,67 @@ plot_model : it will plot the model architecture for you
 
 validation_split : you can split a portion of your data for validation only (model will not get trained on them) it should be float between 0 and 1 (i will recommend to not create a validation split unless you have a really huge data set with lots of similar patterns)
 
+## save_model
 
+it will save your model a .h5 file (don't add .h5)
 
+```python
+def save_model(self, model_file_name=None):
+```
 
+model_name : if its None (defualt), it will save the files like (model_name.h5) where the model_name is the name you specified in the first place
+
+## load_model
+
+it will load a model from those three files
+
+```python
+def load_model(self, name="imageclassification_model"):
+```
+
+model_name : if its None (defualt), it will look for files like (imageclassification_model.h5) 
+
+## predict from file path
+
+it will predict what class the image blongs to from a path
+
+```python
+def predict_from_files_path(self, image_file_path):
+```
+
+image_file_path : the path of the image you want to predict
+
+it will return the name of the class and the percentage that its correct
+
+## predict from imshow
+
+it will predict what class the image blongs to from a cv2 object
+
+```python
+def predict_from_imshow(self, img):
+```
+
+img : a cv2 image object 
+
+it will return the name of the class and the percentage that its correct
+
+## realtime prediction
+
+it will predict from a live video feed (it will open a live cv2 video feed)
+
+```python
+def realtime_prediction(self, src=0):
+```
+
+src : if you have multiple webcams or virtual webcams it will let you choose from them if you only have one live it empty
+
+## realtime face prediction
+
+its exacly like the realtime_prediction() method but it will detect facec with a haarcascadde and will feed the model with the facec to predict
+
+```python
+def realtime_face_prediction(self, src=0):
+```
+
+src : if you have multiple webcams or virtual webcams it will let you choose from them if you only have one live it empty
 
