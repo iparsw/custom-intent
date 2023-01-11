@@ -1,7 +1,7 @@
 
 # Custom Intents
 
-V0.7.0
+V0.7.1
 
 A package build on top of keras for creating and training deep learning chatbots (text classification), binary image classification and linear regression models in just three lines of code 
 
@@ -228,7 +228,7 @@ file.add_tag_app(tag="about")
 file.add_pattern_app("about")
 ```
 
-# BinaryImageClassificate class
+# BinaryImageClassificator class
 
 the first class in CustomIntent package is BinaryImageClassificate
 it let you create and train deep learning image classification models with just three line of code !!
@@ -341,4 +341,110 @@ def realtime_face_prediction(self, src=0):
 ```
 
 src : if you have multiple webcams or virtual webcams it will let you choose from them if you only have one live it empty
+
+## example of using BinaryImageClassificator
+
+```python
+from CustomIntents import BinaryImageClassificator
+
+model = BinaryImageClassificator(model_name="test1", data_folder="data/parsa", first_class="sad", second_class="happy")
+model.train_model(epochs=5, model_type="s1", logdir="logs", learning_rate=0.0001, prefetching=True) #, class_weight={0: 1.0, 1: 2.567750677506775})
+model.save_model(model_file_name="test1")
+```
+```python
+from CustomIntents import BinaryImageClassificator
+
+model.load_model("models/test1")
+model.realtime_face_prediction()
+```
+
+## models
+
+BinaryImageClassificator class have a verity of predefined models including
+
+s1 : a small but powrful model
+
+s1a : s1 but with augmentong data in random ways preventing the risk of overfiting to an extand
+
+s2 :
+
+s3 :
+
+m1 :
+
+for more nformation read MODELS.md file
+
+# PLinearRegression class
+
+it's a simple linear regression class with one input and one output
+
+## Init arguaments
+
+```python
+def __init__(self, data=None, x_axes1=None, y_axes1=None, model_name="test model"):
+```
+
+data : if you have your data as a aray like [[x_axes], [y_axes]] you can pass it here
+
+x_axes1 : if you have your x values (inputs) and y values (output) seperetly you can pass the array that contains x valeus here
+
+y_axes1 : if you have your x values (inputs) and y values (output) seperetly you can pass the array that contains y valeus here
+
+model_name : name your model
+
+## train model
+
+you will train your model on your data with this method
+
+```python
+def train_model(self, algorythm="1", training_steps=10000,
+                start_step=None, verbose=1, plot_input_data=True,
+                learning_rate=0.01, plot_result=True):
+```
+
+algorythm : you can choose bitween 1, 1.1 and 2  (1 is really simple and fast but 2 is the propper linear reggresion one)
+
+training_steps : it's how many steps you want to train your model
+
+start_step : it's the starting stepfor algorythm 1 and 1.1
+
+verbose : if it's set to 1 it will show you the details of trainong in every step
+
+plot_input_data : it will plot the training data
+
+learning_rate : it's the learning rate used for algorythm 2
+
+plot_result : it will plot the line of best fit that it found along the side of the training data
+
+## save the model to csv
+
+it will save your model as a csv file containing the information of the line of  best fit
+
+```python
+def save_model_to_csv(self, file_dir="test_model.csv"):
+```
+
+file_dir : the name and dir you want to save your model to (include .csv)
+
+## load model from csv
+
+it will load your model from a csv file containing the information of the line of  best fit
+
+```python
+def load_model_from_csv(self, file_dir="test_model.csv")
+```
+
+file_dir : the name and dir you want to load your model from (include .csv)
+
+## make prediction
+
+it will make predictions for you
+
+```python
+def make_prediction(self, x):
+```
+
+x : your input data either in a numerical form or a numpy array containing multiple numerical values
+
+it will return either a float (if you input is just a numerical value) or a numpy array containing multiple floats
 
