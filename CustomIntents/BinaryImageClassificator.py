@@ -215,7 +215,7 @@ class BinaryImageClassificator:
             self.model.add(MaxPooling2D())
             self.model.add(Dropout(0.4))
             self.model.add(Flatten())
-            self.model.add(Dense(128, activation='relu'))
+            self.model.add(Dense(256, activation='relu'))
             self.model.add(Dense(1, activation='sigmoid'))
             succsesful = True
 
