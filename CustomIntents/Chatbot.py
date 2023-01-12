@@ -584,7 +584,7 @@ class ChatBot:
             res = self._get_response(ints, self.intents)
         return res
 
-    def get_tag_by_id(self, id):
+    def get_tag_by_id(self, id1):
         pass
 
     def request_method(self, message):

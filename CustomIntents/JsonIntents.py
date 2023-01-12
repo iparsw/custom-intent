@@ -20,7 +20,7 @@ class JsonIntents:
             intents = self.json_file
             counter = 0
 
-            for tag in (intents["intents"]):
+            for _ in (intents["intents"]):
                 while True:
                     new_term = input(intents["intents"][counter]["tag"] + " : ")
                     if new_term.upper() == "D":
@@ -43,7 +43,7 @@ class JsonIntents:
         else:
             intents = self.json_file
             tag_counter = 0
-            for i in (intents["intents"]):
+            for _ in (intents["intents"]):
                 if intents["intents"][tag_counter]["tag"] == tag:
                     break
                 else:
@@ -72,7 +72,7 @@ class JsonIntents:
         intents = self.json_file
         counter = 0
 
-        for tag in (intents["intents"]):
+        for _ in (intents["intents"]):
             intents["intents"][counter]["patterns"] = list(
                 OrderedDict.fromkeys(intents["intents"][counter]["patterns"]))
             counter += 1

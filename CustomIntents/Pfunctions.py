@@ -68,6 +68,7 @@ def Psqrt(n, one):
 
 def Psqrt_approx(num, root=2, n_dec=10):
     nat_num = 1
+    result = None
     while nat_num ** root <= num:
         result = nat_num
         nat_num += 1
@@ -101,13 +102,13 @@ def Psqrt_taylor_bin_coef(m, k):  # m choose k
 def Psqrt_taylor(num):
     exp = len(str(num))
     x = (num / (10 ** exp)) - 1
-    sum = 0
+    sumation = 0
     for term in range(10):
-        sum += Psqrt_taylor_bin_coef(1 / 2, term) * (x ** term)
+        sumation += Psqrt_taylor_bin_coef(1 / 2, term) * (x ** term)
     if exp % 2 == 0:
-        result = sum * (10 ** (exp / 2))
+        result = sumation * (10 ** (exp / 2))
     else:
-        result = sum * 3.16227766017 * (10 ** ((exp - 1) / 2))
+        result = sumation * 3.16227766017 * (10 ** ((exp - 1) / 2))
     return result
 
 
@@ -175,13 +176,12 @@ def fibonacci_taghsim(n) -> int:
 
 def calculating_e(n) -> int:
     e_value = 1
-    last = n
     for i in range(n):
         e_value += 1 / math.factorial(i + 1)
     return e_value
 
 
-def calculating_e_pro(n, precision) -> int:
+def calculating_e_pro(n, precision):
     with localcontext() as ctx:
         ctx.prec = precision  # "precision" digits precision
         e_value = Decimal(1)
@@ -190,12 +190,12 @@ def calculating_e_pro(n, precision) -> int:
     return e_value
 
 
-def calculating_e_2(n) -> int:
+def calculating_e_2(n):
     e_value = ((1 + (1 / n)) ** n)
     return e_value
 
 
-def calculating_e_2_pro(n, precision) -> int:
+def calculating_e_2_pro(n, precision):
     with localcontext() as ctx:
         ctx.prec = precision  # "precision" digits precision
         e_value = Decimal((Decimal(1) + Decimal((Decimal(1) / Decimal(n)))) ** Decimal(n))
@@ -211,7 +211,6 @@ def calculating_e_2_smart(digits):
 
 def calculating_e_printing_every_step(n) -> int:
     e_value = 1
-    last = n
     for i in range(n):
         e_value += 1 / math.factorial(i + 1)
         print(e_value)
@@ -228,11 +227,11 @@ def e_number():
 def pi_1(n, precision):
     with localcontext() as ctx:
         ctx.prec = precision  # "precision" digits precision
-        pi = Decimal(0)
+        pi_value = Decimal(0)
         for k in range(n):
-            pi += (Decimal(4) / (Decimal(8) * k + 1) - Decimal(2) / (Decimal(8) * k + 4) - Decimal(1) / (
+            pi_value += (Decimal(4) / (Decimal(8) * k + 1) - Decimal(2) / (Decimal(8) * k + 4) - Decimal(1) / (
                     Decimal(8) * k + 5) - Decimal(1) / (Decimal(8) * k + 6)) / Decimal(16) ** k
-    return pi
+    return pi_value
 
 
 def pi_Nilakantha_1(reps, decimals):
@@ -301,7 +300,7 @@ def pi_Chudnovsky_bs_1(digits):
 
 
 def pi_MonteCarlo_visiual(number_of_points):
-    np = int(number_of_points)
+    number_of_points = int(number_of_points)
 
     turtle.speed("fastest")
     length = 300  # radius of circle and length of the square in pixels
@@ -339,7 +338,7 @@ def pi_MonteCarlo_visiual(number_of_points):
     turtle.circle(length, -90)
 
     inside = 0
-    for i in range(0, np):
+    for i in range(0, number_of_points):
         # get dot position
         x = random.uniform(0, length)
         y = random.uniform(0, length)
@@ -355,7 +354,7 @@ def pi_MonteCarlo_visiual(number_of_points):
         turtle.goto(x, y)
         turtle.pendown()
         turtle.dot()
-    return (inside / np) * 4.0
+    return (inside / number_of_points) * 4.0
 
 
 def pi_MonteCarlo_Visiual_2(number_of_points):
@@ -372,7 +371,7 @@ def pi_MonteCarlo_Visiual_2(number_of_points):
     insideX, insideY, outsideX, outsideY, Iteration, CurrentPi = [], [], [], [], [], []
     insideCounter = 0
 
-    # Generate a bunch of values of x and y between -1 and 1, then assess their combined radius on an xy plane
+    # Generate a bunch of values of x and y between -1 and 1, then assess their combined radius on a xy plane
     for i in range(number_of_points):
         x = 2 * (np.random.random() - 0.5)
         y = 2 * (np.random.random() - 0.5)
@@ -473,7 +472,6 @@ def pi_RamanujanSato_pro(reps, decimals):
 
 # simple golden ratio function
 def golden_ratio_1():
-    sqrtOf5 = math.sqrt(5)
     golden_ratio = (1 + math.sqrt(5)) / 2
     return golden_ratio
 
@@ -572,7 +570,7 @@ def quadratic_solution_legacy(a, b, c):
         return False
 
 
-def quadratic_solution(a, b, c, tol=1e-18):
+def quadratic_solution(a, b, c):
     discriminant = b ** 2 - 4 * a * c
     if discriminant > 0:
         root1 = float(-b + math.sqrt(b ** 2 - 4 * a * c)) / (2 * a)

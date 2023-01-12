@@ -41,7 +41,6 @@ class PLinearRegression:
                     uper += 1
                 elif predicted_y < actual_y:
                     lower += 1
-        result = None
         # 0 mean lower is more
         # 1 mean equal
         # 2 mean uper is more

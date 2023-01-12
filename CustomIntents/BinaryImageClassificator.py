@@ -98,7 +98,7 @@ class BinaryImageClassificator:
                     if tip not in image_exts:
                         print('Image not in ext list {}'.format(image_path))
                         os.remove(image_path)
-                except Exception as e:
+                except Exception:
                     print('Issue with image {}'.format(image_path))
                     os.remove(image_path)
 
@@ -108,7 +108,7 @@ class BinaryImageClassificator:
         self.batch = self.data_iterator.next()
         print(f"{bcolors.OKGREEN}loading data succsesfuly{bcolors.ENDC}")
 
-    def scale_data(self, model_type="s1"):
+    def scale_data(self):
         self.data = self.data.map(lambda x, y: (x / 255, y))
         print(f"{bcolors.OKGREEN}scaling data succsesfuly{bcolors.ENDC}")
 
@@ -126,7 +126,7 @@ class BinaryImageClassificator:
 
     def split_data(self, validation_split=0.2):
         self.train_size = int(len(self.data) * (1 - validation_split))
-        self.val_size = int(len(self.data) * (validation_split))
+        self.val_size = int(len(self.data) * validation_split)
         self.test_size = int(len(self.data) * .0)
         self.train = self.data.take(self.train_size)
         self.val = self.data.skip(self.train_size).take(self.val_size)
@@ -280,7 +280,7 @@ class BinaryImageClassificator:
         self.oom_avoider()
         self.remove_dogy_images()
         self.load_data()
-        self.scale_data(model_type=model_type)
+        self.scale_data()
         self.augmanet_data(model_type=model_type)
         self.split_data(validation_split=validation_split)
         if prefetching:
