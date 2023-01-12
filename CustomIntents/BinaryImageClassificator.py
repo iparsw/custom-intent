@@ -35,6 +35,8 @@ from CustomIntents.Bcolor import bcolors
 
 import pkg_resources
 
+import gradio as gr
+
 
 class VideoStream:
 
@@ -334,17 +336,34 @@ class BinaryImageClassificator:
         resize = tf.image.resize(img, (256, 256))
         yhat = self.model.predict(np.expand_dims(resize / 255, 0))
         if yhat > 0.5:
-            return self.first_class, ((yhat * 2) - 0.5) * 100
+            return self.first_class, ((yhat[0][0] - 0.5) * 2) * 100
         else:
-            return self.second_class, (1 - (yhat * 2)) * 100
+            return self.second_class, (1 - (yhat[0][0] * 2)) * 100
 
     def predict_from_imshow(self, img):
         resize = tf.image.resize(img, (256, 256))
         yhat = self.model.predict(np.expand_dims(resize / 255, 0))
         if yhat > 0.5:
-            return self.first_class
+            return self.first_class, ((yhat[0][0] - 0.5) * 2) * 100
         else:
-            return self.second_class
+            return self.second_class, (1 - (yhat[0][0] * 2)) * 100
+
+    def predict_from_numpy(self, img):
+        resize = tf.image.resize(img, (256, 256))
+        yhat = self.model.predict(np.expand_dims(resize / 255, 0))
+        if yhat > 0.5:
+            return self.first_class, ((yhat[0][0] - 0.5) * 2) * 100
+        else:
+            return self.second_class, (1 - (yhat[0][0] * 2)) * 100
+
+    def gradio_preview(self, share=False, inbrowser=True):
+        demo = gr.Interface(self.predict_from_numpy,
+                            inputs=gr.Image(label="your image"),
+                            outputs=[gr.Label(label="class"),
+                                     gr.Label(label="Accuracy")],
+                            allow_flagging="never")
+        print(f"open http://localhost:7860 for viewing your model preview")
+        demo.launch(share=share, inbrowser=inbrowser)
 
     def evaluate_model(self):
         self.pre = Precision()

@@ -29,7 +29,6 @@ import wandb
 from wandb.keras import WandbCallback
 import matplotlib.pyplot as plt
 
-
 from CustomIntents.Pfunction.Pfunctions import is_float
 from CustomIntents.Bcolor import bcolors
 
@@ -608,15 +607,14 @@ class ChatBot:
         history.append((message, response))
         return history, history
 
-
-    def gradio_preview(self, ask_for_threshold=False):
-        inputs = [gr.Textbox(lines=1, placeholder="your input !!"), "state"]
+    def gradio_preview(self, ask_for_threshold=False, share=False, inbrowser=True):
+        inputs = [gr.Textbox(lines=1, label="input"), "state"]
         if ask_for_threshold:
-            inputs.append(gr.Slider(0, 1))
-        chatbot = gr.Chatbot().style(color_map=("green", "pink"))
+            inputs.append(gr.Slider(0, 1, label="threshhold"))
+        chatbot = gr.Chatbot(label="chat bot").style(color_map=("green", "pink"))
         demo = gr.Interface(fn=self._gradio_chatbot,
                             inputs=inputs,
                             outputs=[chatbot, "state"],
                             allow_flagging="never")
         print(f"open http://localhost:7860 for viewing your model preview")
-        demo.launch()
+        demo.launch(share=share, inbrowser=inbrowser)
