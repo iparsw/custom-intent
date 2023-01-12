@@ -23,20 +23,22 @@ from tensorflow.python.keras.optimizer_v2.adamax import Adamax
 from tensorflow.python.keras.optimizer_v2.adagrad import Adagrad
 from tensorflow.python.keras.metrics import Precision
 
-from random import random
+import random
 
 import wandb
 from wandb.keras import WandbCallback
 import matplotlib.pyplot as plt
 
 
-import Pfunctions
+from CustomIntents.Pfunction.Pfunctions import is_float
 from CustomIntents.Bcolor import bcolors
+
+import gradio as gr
 
 
 class ChatBot:
 
-    def __init__(self, intents, intent_methods, model_name="assistant_model", threshold=0.25, w_and_b=False,
+    def __init__(self, intents, intent_methods={}, model_name="assistant_model", threshold=0.25, w_and_b=False,
                  tensorboard=False):
         nltk.download('punkt', quiet=True)
         nltk.download('wordnet', quiet=True)
@@ -67,16 +69,17 @@ class ChatBot:
 
         # ckeing for right types of input
         # validation split
-        if type(validation_split) is not int:
-            print(f"{bcolors.FAIL}validation split should be an int ! \n"
+        if not is_float(validation_split):
+            print(f"{bcolors.FAIL}validation split should be a float ! \n"
                   f"it will defualt to 0{bcolors.ENDC}")
             validation_split = 0
         else:
             if validation_split < 0 or validation_split >= 1:
                 print(f"{bcolors.FAIL}validation split should be beetwen 0 and 1\n"
                       f"it will defualt to 0 {bcolors.ENDC}")
+                validation_split = 0
         # ignore letters
-        if type(ignore_letters) is not list:
+        if type(ignore_letters) is not list and ignore_letters is not None:
             print(f"{bcolors.FAIL}ignore letters should be a list of letters you want to ignore\n"
                   f"it will set to defualt (['!', '?', ',', '.']){bcolors.ENDC}")
         # batch size
@@ -572,7 +575,7 @@ class ChatBot:
             res = self._get_tag(ints, self.intents)
         return res
 
-    def request_response(self, message, debug_mode=False, threshold=None):
+    def request_response(self, message, threshold=None, debug_mode=False):
         if debug_mode:
             print(f"message = {message}")
             ints = self._predict_class(message, threshold=threshold)
@@ -597,3 +600,23 @@ class ChatBot:
             self.intent_methods[ints[0]['intent']]()
         else:
             return self._get_response(ints, self.intents)
+
+    def _gradio_chatbot(self, message, history, threshhold=None):
+        history = history or []
+        message = message.lower()
+        response = self.request_response(message, threshold=threshhold)
+        history.append((message, response))
+        return history, history
+
+
+    def gradio_preview(self, ask_for_threshold=False):
+        inputs = [gr.Textbox(lines=1, placeholder="your input !!"), "state"]
+        if ask_for_threshold:
+            inputs.append(gr.Slider(0, 1))
+        chatbot = gr.Chatbot().style(color_map=("green", "pink"))
+        demo = gr.Interface(fn=self._gradio_chatbot,
+                            inputs=inputs,
+                            outputs=[chatbot, "state"],
+                            allow_flagging="never")
+        print(f"open http://localhost:7860 for viewing your model preview")
+        demo.launch()

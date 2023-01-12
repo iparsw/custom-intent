@@ -5,13 +5,13 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="CustomIntents",
-    version="0.7.2",
+    version="0.7.3",
     author="Parsa Roshanak (iparsw)",
     author_email="parsaroshanak@gmail.com",
     long_description=long_description,
     long_description_content_type='text/markdown',
     url="https://github.com/iparsw/custom-intent.git",
-    packages=["CustomIntents"],
+    packages=["CustomIntents", "CustomIntents.Pfunction"],
     python_requires='>=3.9, <=3.11',
     include_package_data=True,
     package_data={'': ["cascades/haarcascade_frontalcatface.xml"]},

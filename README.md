@@ -1,7 +1,8 @@
 
 # Custom Intents
 
-V0.7.2
+V0.7.3
+(it's still in buggy alpha)
 
 A package build on top of keras for creating and training deep learning chatbots (text classification), binary image classification and linear regression models in just three lines of code 
 

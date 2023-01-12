@@ -1,12 +1,8 @@
-import json
-import os
-from pathlib import Path
-from time import perf_counter
 import numpy as np
 from random import random
 import matplotlib.pyplot as plt
 import csv
-from CustomIntents.Pfunctions import ecualidean_distance, Ptimeit
+from CustomIntents.Pfunction.Pfunctions import ecualidean_distance, Ptimeit
 
 
 class PLinearRegression:

@@ -42,10 +42,9 @@ from threading import Thread
 
 from functools import wraps
 
-from numba import njit, jit
 from collections import Counter
 
-import Pfunctions
+from CustomIntents.Pfunction import Pfunctions
 
 
 def timeit(func):
