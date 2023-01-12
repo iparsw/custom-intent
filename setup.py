@@ -23,6 +23,7 @@ setuptools.setup(
         "nltk==3.8",
         "numba==0.56.4",
         "numpy==1.23.5",
+        "setuptools==65.7.0",
         "opencv_python==4.7.0.68",
         "tensorflow==2.10.0",
         "wandb==0.13.7",
