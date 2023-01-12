@@ -25,6 +25,7 @@ setuptools.setup(
         "numpy==1.23.5",
         "opencv_python==4.7.0.68",
         "tensorflow==2.10.0",
-        "wandb==0.13.7"
+        "wandb==0.13.7",
+        "gradio==3.16.1"
     ]
 )

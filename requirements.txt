@@ -1,0 +1,11 @@
+gmpy2==2.1.5
+gradio==3.16.1
+keras==2.10.0
+Keras_Preprocessing==1.1.2
+matplotlib==3.6.2
+nltk==3.8
+numpy==1.23.5
+opencv_python==4.7.0.68
+setuptools==65.5.0
+tensorflow==2.10.0
+wandb==0.13.7

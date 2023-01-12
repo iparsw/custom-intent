@@ -160,6 +160,20 @@ the same as request_tag but it will return a random response from intents
 def request_response(self, message, debug_mode=False, threshold=None):
 ```
 
+## gradio_preview
+
+it will open up a nice gui for testing your model in your browser
+
+```python
+def gradio_preview(self, ask_for_threshold=False, share=False, inbrowser=True):
+```
+
+ask_for_threshold : if set to True it will create a slider that you can set the threshold of the model with it
+
+share : if set to True it will make the demo public
+
+inbrowser : it will aoutomaticlly open a new browser page if set to True
+
 ## model types
 
 you can choose one of the defined models according to the size of diffrente patterns and tags you have (you can just try and see wich one is right for your use case)
@@ -342,6 +356,18 @@ def realtime_face_prediction(self, src=0):
 ```
 
 src : if you have multiple webcams or virtual webcams it will let you choose from them if you only have one live it empty
+
+## gradio_preview
+
+it will open up a nice gui for testing your model in your browser
+
+```python
+def gradio_preview(self, share=False, inbrowser=True):
+```
+
+share : if set to True it will make the demo public
+
+inbrowser : it will aoutomaticlly open a new browser page if set to True
 
 ## example of using BinaryImageClassificator
 
