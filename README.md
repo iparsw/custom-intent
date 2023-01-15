@@ -475,3 +475,6 @@ x : your input data either in a numerical form or a numpy array containing multi
 
 it will return either a float (if you input is just a numerical value) or a numpy array containing multiple floats
 
+<h3>Visitors :</h3>
+<br>
+<img src="https://profile-counter.glitch.me/iparsw/count.svg" alt="Visitors">
