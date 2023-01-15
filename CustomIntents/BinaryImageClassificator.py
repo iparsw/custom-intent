@@ -11,7 +11,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from keras_preprocessing.image import img_to_array
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense, Dropout, MaxPooling2D, Flatten, \
-    Conv2D, GlobalAveragePooling2D, Activation
+    Conv2D, GlobalAveragePooling2D, Activation, AveragePooling2D
 from tensorflow.python.keras import layers
 from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
 from tensorflow.python.keras.models import load_model
@@ -19,6 +19,7 @@ from tensorflow.python.keras.optimizer_v2.adam import Adam
 from tensorflow.python.keras.optimizer_v2.adamax import Adamax
 from tensorflow.python.keras.optimizer_v2.adagrad import Adagrad
 from tensorflow.python.keras.metrics import Precision, Recall, BinaryAccuracy
+from keras.layers.normalization.batch_normalization import BatchNormalization
 
 import wandb
 from wandb.keras import WandbCallback
@@ -86,9 +87,9 @@ class BinaryImageClassificator:
         self.data_folder = data_folder
         self.name = model_name
         self.data = None
-        self.oom_avoider()
+        self._oom_avoider()
 
-    def remove_dogy_images(self):
+    def _remove_dogy_images(self):
         data_dir = self.data_folder
         image_exts = ['jpeg', 'jpg', 'bmp', 'png']
         for image_class in os.listdir(data_dir):
@@ -104,17 +105,17 @@ class BinaryImageClassificator:
                     print('Issue with image {}'.format(image_path))
                     os.remove(image_path)
 
-    def load_data(self):
+    def _load_data(self):
         self.data = tf.keras.utils.image_dataset_from_directory(self.data_folder)
         self.data_iterator = self.data.as_numpy_iterator()
         self.batch = self.data_iterator.next()
         print(f"{bcolors.OKGREEN}loading data succsesfuly{bcolors.ENDC}")
 
-    def scale_data(self):
+    def _scale_data(self):
         self.data = self.data.map(lambda x, y: (x / 255, y))
         print(f"{bcolors.OKGREEN}scaling data succsesfuly{bcolors.ENDC}")
 
-    def augmanet_data(self, model_type="s1"):
+    def _augmanet_data(self, model_type="s1"):
         if "a" in model_type:
             data_augmentation = Sequential([
                 tf.keras.layers.RandomFlip(mode="horizontal"),
@@ -126,23 +127,23 @@ class BinaryImageClassificator:
                                       num_parallel_calls=tf.data.AUTOTUNE)
             print(f"{bcolors.OKGREEN}augmenting data succsesfuly{bcolors.ENDC}")
 
-    def split_data(self, validation_split=0.2):
-        self.train_size = int(len(self.data) * (1 - validation_split))
+    def _split_data(self, validation_split=0.2, test_split=0):
+        self.train_size = int(len(self.data) * (1 - validation_split - test_split))
         self.val_size = int(len(self.data) * validation_split)
-        self.test_size = int(len(self.data) * .0)
+        self.test_size = int(len(self.data) * test_split)
         self.train = self.data.take(self.train_size)
         self.val = self.data.skip(self.train_size).take(self.val_size)
         self.test = self.data.skip(self.train_size + self.val_size).take(self.test_size)
         print(f"{bcolors.OKGREEN}spliting data succsesfuly{bcolors.ENDC}")
 
-    def prefetching_data(self):
+    def _prefetching_data(self):
         self.train = self.train.prefetch(tf.data.AUTOTUNE)
         self.val = self.val.prefetch(tf.data.AUTOTUNE)
         self.test = self.test.prefetch(tf.data.AUTOTUNE)
         print(f"{bcolors.OKGREEN}prefetching data succsesfuly{bcolors.ENDC}")
 
     @staticmethod
-    def make_small_Xception_model(input_shape, num_classes=2):
+    def _make_small_Xception_model(input_shape, num_classes=2):
         inputs = keras.Input(shape=input_shape)
 
         x = tf.compat.v1.keras.layers.Rescaling(1.0 / 255)(inputs)
@@ -178,7 +179,7 @@ class BinaryImageClassificator:
         outputs = Dense(units, activation=activision)(x)
         return keras.Model(inputs, outputs)
 
-    def build_model(self, optimizer, model_type="s1"):
+    def _build_model(self, optimizer, model_type="s1"):
         print(f"model type : {model_type}")
         succsesful = False
         if model_type == "s1" or model_type == "s1a":
@@ -236,12 +237,91 @@ class BinaryImageClassificator:
             self.model.add(Dropout(0.5))
             self.model.add(Dense(1, activation='sigmoid'))
             succsesful = True
+
+        elif model_type == "l1" or model_type.lower() == "vgg-19":
+            self.model = Sequential()
+            self.model.add(Conv2D(64, (3, 3), 1, padding="same", activation='relu', input_shape=(256, 256, 3)))
+            self.model.add(Conv2D(64, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(128, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(128, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(256, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(256, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(256, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(256, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Dropout(0.1))
+            self.model.add(Flatten())
+            self.model.add(Dense(4096, activation='relu'))
+            self.model.add(Dense(4096, activation='relu'))
+            self.model.add(Dense(1, activation='sigmoid'))
+        elif model_type == "l1.1":
+            self.model = Sequential()
+            self.model.add(Conv2D(64, (3, 3), 1, padding="same", activation='relu', input_shape=(256, 256, 3)))
+            self.model.add(Conv2D(64, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(128, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(128, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(256, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(256, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(256, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(256, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(BatchNormalization())
+            self.model.add(GlobalAveragePooling2D())
+            self.model.add(Dropout(0.1))
+            self.model.add(Dense(2048, activation="relu"))
+            self.model.add(Dropout(0.1))
+            self.model.add(Dense(2048, activation="relu"))
+            self.model.add(Dense(1, activation='sigmoid'))
+        elif model_type == "l2":
+            self.model = Sequential()
+            self.model.add(Conv2D(128, (7, 7), 1, padding="same", activation='relu', input_shape=(256, 256, 3)))
+            self.model.add(MaxPooling2D())
+            for _ in range(6):
+                self.model.add(Conv2D(128, (3, 3), 1, padding="same", activation='relu'))  # 6
+            for _ in range(8):
+                self.model.add(Conv2D(256, (3, 3), 1, padding="same", activation='relu'))  # 8
+            for _ in range(12):
+                self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))  # 12
+            for _ in range(6):
+                self.model.add(Conv2D(512, (3, 3), 1, padding="same", activation='relu'))  # 6
+            self.model.add(BatchNormalization())
+            self.model.add(GlobalAveragePooling2D())
+            self.model.add(Dropout(0.1))
+            self.model.add(Dense(2048, activation="relu"))
+            self.model.add(Dropout(0.1))
+            self.model.add(Dense(2048, activation="relu"))
+            self.model.add(Dense(1, activation='sigmoid'))
+
+
         elif model_type == "x1":
-            self.model = self.make_small_Xception_model(input_shape=(256, 256, 3), num_classes=2)
+            self.model = self._make_small_Xception_model(input_shape=(256, 256, 3), num_classes=2)
         else:
             print(f"{bcolors.FAIL}model {model_type} is undifinde\n"
                   f"it will defuat to s1 {bcolors.ENDC}")
-            self.build_model(model_type="s1", optimizer=optimizer)
+            self._build_model(model_type="s1", optimizer=optimizer)
             succsesful = False
 
         if succsesful:
@@ -249,14 +329,11 @@ class BinaryImageClassificator:
 
         self.model.compile(optimizer=optimizer, loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
 
-    @staticmethod
-    def build_optimizer(learning_rate=0.00001, optimizer_type="adam"):
-        opt = None
+    def _build_optimizer(self, learning_rate=0.00001, optimizer_type="adam"):
         if optimizer_type.lower() == "adam":
-            opt = Adam(learning_rate=learning_rate)
-        return opt
+            self.optimizer = Adam(learning_rate=learning_rate)
 
-    def seting_logdir(self):
+    def _seting_logdir(self):
         current_dir = os.getcwd()
         parent_dir = os.path.dirname(current_dir)
         if self.logdir is None:
@@ -274,32 +351,32 @@ class BinaryImageClassificator:
                 os.mkdir(path)
 
     def train_model(self, epochs=20, model_type="s1", logdir=None, optimizer_type="adam", learning_rate=0.00001,
-                    class_weight=None, prefetching=False, plot_model=True, validation_split=0.2):
+                    class_weight=None, prefetching=False, plot_model=True, validation_split=0.2, test_split=0):
         if type(epochs) is not int:
             print(f"{bcolors.FAIL}epochs should be an int\n"
                   f"it will defualt to 20{bcolors.ENDC}")
             epochs = 20
-        self.oom_avoider()
-        self.remove_dogy_images()
-        self.load_data()
-        self.scale_data()
-        self.augmanet_data(model_type=model_type)
-        self.split_data(validation_split=validation_split)
+        self._oom_avoider()
+        self._remove_dogy_images()
+        self._load_data()
+        self._scale_data()
+        self._augmanet_data(model_type=model_type)
+        self._split_data(validation_split=validation_split, test_split=test_split)
         if prefetching:
-            self.prefetching_data()
+            self._prefetching_data()
         self.logdir = logdir
-        self.seting_logdir()
-        self.optimizer = self.build_optimizer(optimizer_type=optimizer_type, learning_rate=learning_rate)
-        self.build_model(model_type=model_type, optimizer=self.optimizer)
+        self._seting_logdir()
+        self._build_optimizer(optimizer_type=optimizer_type, learning_rate=learning_rate)
+        self._build_model(model_type=model_type, optimizer=self.optimizer)
         if plot_model:
             tf.keras.utils.plot_model(self.model, show_shapes=True, show_layer_activations=True)
         self.tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=self.logdir)
         self.hist = self.model.fit(self.train, epochs=epochs, validation_data=self.val,
                                    callbacks=[self.tensorboard_callback], class_weight=class_weight)
-        self.plot_acc()
-        self.plot_loss()
+        self._plot_acc()
+        self._plot_loss()
 
-    def plot_loss(self):
+    def _plot_loss(self):
         fig = plt.figure()
         plt.plot(self.hist.history['loss'], color='teal', label='loss')
         plt.plot(self.hist.history['val_loss'], color='orange', label='val_loss')
@@ -308,7 +385,7 @@ class BinaryImageClassificator:
         plt.grid()
         plt.show()
 
-    def plot_acc(self):
+    def _plot_acc(self):
         fig = plt.figure()
         plt.plot(self.hist.history['accuracy'], color='teal', label='accuracy')
         plt.plot(self.hist.history['val_accuracy'], color='orange', label='val_accuracy')
@@ -326,7 +403,7 @@ class BinaryImageClassificator:
         self.model = load_model(f"{name}.h5")
 
     @staticmethod
-    def oom_avoider():
+    def _oom_avoider():
         gpus = tf.config.experimental.list_physical_devices("GPU")
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)

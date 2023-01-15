@@ -34,6 +34,11 @@ from CustomIntents.Bcolor import bcolors
 
 import gradio as gr
 
+from datetime import datetime
+import tkinter as tk
+import customtkinter as ctk
+import textwrap
+
 
 class ChatBot:
 
@@ -618,3 +623,99 @@ class ChatBot:
                             allow_flagging="never")
         print(f"open http://localhost:7860 for viewing your model preview")
         demo.launch(share=share, inbrowser=inbrowser)
+
+    def cli_preview(self):
+        print("Print exit to leave")
+        while True:
+            text = input("YOU : ")
+            if text == 'exit':
+                break
+            print("BOT : " + self.request_response(text))
+
+        print("Ended successfully")
+
+    def gui_preview(self, user_name=""):
+        def new_massege(msg=None, bot_massage=None):
+            # user message
+            if msg is not None:
+                ChatLog.config(state="normal")
+                ChatLog.insert(tk.END, ' ' + current_time + ' ', ("small", "right", "greycolour"))
+                ChatLog.window_create(tk.END, window=ctk.CTkLabel(ChatLog, text=msg,
+                                                                  wraplength=300, font=("Arial", 12), justify="left",
+                                                                  fg_color="#1f6aa5", text_color="#ffffff", padx=1,
+                                                                  pady=5,
+                                                                  corner_radius=10))
+                ChatLog.insert(tk.END, '\n ', "left")
+                ChatLog.config(foreground="#0000CC", font=("Helvetica", 10))
+                ChatLog.yview(tk.END)
+                ChatLog.config(state="disabled")
+            # bot respons
+            if bot_massage is None and msg is not None:
+                res = self.request_response(msg)
+            else:
+                res = bot_massage
+            ChatLog.config(state="normal")
+            ChatLog.insert(tk.END, current_time + ' ', ("small", "greycolour", "left"))
+            ChatLog.window_create(tk.END, window=ctk.CTkLabel(ChatLog, text=res,
+                                                              wraplength=300, font=("Arial", 12), justify="left",
+                                                              fg_color="#DDDDDD", text_color="#000000", padx=1, pady=5,
+                                                              corner_radius=10))
+            ChatLog.insert(tk.END, '\n ', "right")
+            ChatLog.config(state="disabled")
+            ChatLog.yview(tk.END)
+
+        def send_by_enter(event):
+            msg = EntryBox.get("1.0", 'end-1c').strip()
+            EntryBox.delete("0.0", tk.END)
+
+            if msg != '':
+                new_massege(msg)
+
+        def send_by_button():
+            getmsg = EntryBox.get("1.0", 'end-1c').strip()
+            msg = textwrap.fill(getmsg, 30)
+            EntryBox.delete("0.0", tk.END)
+
+            if msg != '':
+                new_massege(msg)
+
+        base = ctk.CTk()
+        base.title("Chat Bot")
+        base.geometry("400x500")
+        base.resizable(width=False, height=False)
+
+        now = datetime.now()
+        current_time = now.strftime("%H:%M \n")
+
+        # Create Chat window
+        ChatLog = tk.Text(base, bd=0, height="8", width=50, font="Helvetica", wrap="word", background="#242424")
+        ChatLog.config(state="normal")
+        ChatLog.tag_config("right", justify="right")
+        ChatLog.tag_config("small", font=("Helvetica", 8), foreground="#c7c7c7")
+        ChatLog.tag_config("colour", foreground="#000000")
+        ChatLog.config(state="disabled")
+        # first message
+        new_massege(bot_massage=f"Hello {user_name}, How can I assist you?")
+
+        # Bind scrollbar to Chat window
+        scrollbar = ctk.CTkScrollbar(base, command=ChatLog.yview, cursor="double_arrow")
+        ChatLog['yscrollcommand'] = scrollbar.set
+
+        # Create Button to send message
+        SendButton = ctk.CTkButton(base, font=("Comic Sans MS", 15, 'bold'), text="Send", width=100, height=70,
+                                   command=send_by_button)
+
+        # Create the box to enter message
+        EntryBox = ctk.CTkTextbox(base, width=29, height=5, font=("Arial", 17), wrap="word")
+
+        # Place all components on the screen
+        scrollbar.place(x=380, y=6, height=480)
+        ChatLog.place(x=20, y=20, height=480, width=450)
+        EntryBox.place(x=20, y=421, height=70, width=300)
+        SendButton.place(x=280, y=421, height=70)
+
+        base.bind('<Return>', send_by_enter)
+
+        base.mainloop()
+
+

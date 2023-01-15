@@ -1,7 +1,7 @@
 
 # Custom Intents
 
-V0.7.3
+V0.7.4
 (it's still in buggy alpha)
 
 A package build on top of keras for creating and training deep learning chatbots (text classification), binary image classification and linear regression models in just three lines of code 
@@ -173,6 +173,24 @@ ask_for_threshold : if set to True it will create a slider that you can set the 
 share : if set to True it will make the demo public
 
 inbrowser : it will aoutomaticlly open a new browser page if set to True
+
+## cli_preview
+
+```python
+def cli_preview(self):
+```
+
+a simple cli interface for testing your model
+
+## gui_preview
+
+a custom gui for triyng or even deploying your model
+
+```python
+def gui_preview(self, user_name=""):
+```
+
+user_name : it will only say hello to you if you pass your name for now
 
 ## model types
 
