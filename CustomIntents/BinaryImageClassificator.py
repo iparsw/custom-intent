@@ -9,17 +9,16 @@ import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from keras_preprocessing.image import img_to_array
-from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers import Dense, Dropout, MaxPooling2D, Flatten, \
-    Conv2D, GlobalAveragePooling2D, Activation, AveragePooling2D
-from tensorflow.python.keras import layers
-from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
-from tensorflow.python.keras.models import load_model
-from tensorflow.python.keras.optimizer_v2.adam import Adam
-from tensorflow.python.keras.optimizer_v2.adamax import Adamax
-from tensorflow.python.keras.optimizer_v2.adagrad import Adagrad
-from tensorflow.python.keras.metrics import Precision, Recall, BinaryAccuracy
-from keras.layers.normalization.batch_normalization import BatchNormalization
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, MaxPooling2D, Flatten, \
+    Conv2D, GlobalAveragePooling2D, Activation, AveragePooling2D, BatchNormalization
+from tensorflow.keras import layers
+from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.models import load_model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adamax
+from tensorflow.keras.optimizers import Adagrad
+from tensorflow.keras.metrics import Precision, Recall, BinaryAccuracy
 
 import wandb
 from wandb.keras import WandbCallback
@@ -266,6 +265,8 @@ class BinaryImageClassificator:
             self.model.add(Dense(4096, activation='relu'))
             self.model.add(Dense(4096, activation='relu'))
             self.model.add(Dense(1, activation='sigmoid'))
+            succsesful = True
+
         elif model_type == "l1.1":
             self.model = Sequential()
             self.model.add(Conv2D(64, (3, 3), 1, padding="same", activation='relu', input_shape=(256, 256, 3)))
@@ -295,6 +296,8 @@ class BinaryImageClassificator:
             self.model.add(Dropout(0.1))
             self.model.add(Dense(2048, activation="relu"))
             self.model.add(Dense(1, activation='sigmoid'))
+            succsesful = True
+
         elif model_type == "l2":
             self.model = Sequential()
             self.model.add(Conv2D(128, (7, 7), 1, padding="same", activation='relu', input_shape=(256, 256, 3)))
@@ -314,10 +317,13 @@ class BinaryImageClassificator:
             self.model.add(Dropout(0.1))
             self.model.add(Dense(2048, activation="relu"))
             self.model.add(Dense(1, activation='sigmoid'))
+            succsesful = True
 
 
         elif model_type == "x1":
             self.model = self._make_small_Xception_model(input_shape=(256, 256, 3), num_classes=2)
+            succsesful = True
+
         else:
             print(f"{bcolors.FAIL}model {model_type} is undifinde\n"
                   f"it will defuat to s1 {bcolors.ENDC}")
