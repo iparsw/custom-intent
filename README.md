@@ -6,9 +6,9 @@ V0.7.5
 
 ## a simple way to create chatbots Ai, image classification Ai and more!!
 
-![Demo](CustomIntents/images/Chat Bot 1_17_2023 7_13_20 PM.png)
+![Demo](images/img2.png)
 
-![Demo](CustomIntents/images/img.png)
+![Demo](images/img.png)
 
 A package build on top of keras for creating and training deep learning chatbots (text classification), binary image classification and linear regression models in just three lines of code 
 
@@ -180,7 +180,7 @@ share : if set to True it will make the demo public
 
 inbrowser : it will aoutomaticlly open a new browser page if set to True
 
-![Demo](CustomIntents/images/img.png)
+![Demo](images/img.png)
 
 ## cli_preview
 
@@ -200,7 +200,7 @@ def gui_preview(self, user_name=""):
 
 user_name : it will only say hello to you if you pass your name for now
 
-![Demo](CustomIntents/images/Chat Bot 1_17_2023 7_13_20 PM.png)
+![Demo](images/img2.png)
 
 ## model types
 
