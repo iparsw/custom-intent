@@ -1,8 +1,14 @@
 
 # Custom Intents
 
-V0.7.4
+V0.7.5
 (it's still in buggy alpha)
+
+## a simple way to create chatbots Ai, image classification Ai and more!!
+
+![Demo](CustomIntents/images/Chat Bot 1_17_2023 7_13_20 PM.png)
+
+![Demo](CustomIntents/images/img.png)
 
 A package build on top of keras for creating and training deep learning chatbots (text classification), binary image classification and linear regression models in just three lines of code 
 
@@ -76,8 +82,8 @@ its exacly what you thing a chatbot
 ## Init arguaments
 
 ```python
-    def __init__(self, intents, intent_methods, model_name="assistant_model", threshold=0.25, w_and_b=False,
-                 tensorboard=False):
+def __init__(self, intents, intent_methods, model_name="assistant_model", threshold=0.25, w_and_b=False,
+             tensorboard=False):
 ```
 intents : its the path of your intents file
 
@@ -174,6 +180,8 @@ share : if set to True it will make the demo public
 
 inbrowser : it will aoutomaticlly open a new browser page if set to True
 
+![Demo](CustomIntents/images/img.png)
+
 ## cli_preview
 
 ```python
@@ -191,6 +199,8 @@ def gui_preview(self, user_name=""):
 ```
 
 user_name : it will only say hello to you if you pass your name for now
+
+![Demo](CustomIntents/images/Chat Bot 1_17_2023 7_13_20 PM.png)
 
 ## model types
 

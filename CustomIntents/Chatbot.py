@@ -5,7 +5,6 @@ import random
 from pathlib import Path
 from time import perf_counter
 
-import keras
 import numpy as np
 import tensorflow as tf
 
@@ -14,14 +13,14 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import nltk
 from nltk.stem import WordNetLemmatizer
 
-from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers import Dense, Dropout
-from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD
-from tensorflow.python.keras.models import load_model
-from tensorflow.python.keras.optimizer_v2.adam import Adam
-from tensorflow.python.keras.optimizer_v2.adamax import Adamax
-from tensorflow.python.keras.optimizer_v2.adagrad import Adagrad
-from tensorflow.python.keras.metrics import Precision
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.models import load_model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adamax
+from tensorflow.keras.optimizers import Adagrad
+from tensorflow.keras.metrics import Precision
 
 import random
 

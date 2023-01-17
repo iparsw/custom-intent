@@ -10,14 +10,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from keras_preprocessing.image import img_to_array
 from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers
 from tensorflow.keras.layers import Dense, Dropout, MaxPooling2D, Flatten, \
     Conv2D, GlobalAveragePooling2D, Activation, AveragePooling2D, BatchNormalization
-from tensorflow.keras import layers
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import SGD, Adam, Adamax, Adagrad
 from tensorflow.keras.models import load_model
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.optimizers import Adamax
-from tensorflow.keras.optimizers import Adagrad
 from tensorflow.keras.metrics import Precision, Recall, BinaryAccuracy
 
 import wandb
@@ -64,7 +61,8 @@ class VideoStream:
 
 
 class BinaryImageClassificator:
-    def __init__(self, data_folder="data", model_name="imageclassification_model", first_class="1", second_class="2"):
+    def __init__(self, data_folder="data", model_name="imageclassification_model", first_class="1", second_class="2",
+                 gpu=None):
         self.optimizer = None
         self.acc = None
         self.re = None
@@ -83,10 +81,22 @@ class BinaryImageClassificator:
         self.train_size = None
         self.data_iterator = None
         self.hist = None
+        self.gpu_usage = gpu
+        self._check_for_gpu_availability()
         self.data_folder = data_folder
         self.name = model_name
         self.data = None
         self._oom_avoider()
+
+    def _check_for_gpu_availability(self):
+        number_of_gpus = len(tf.config.list_physical_devices('GPU'))
+        if self.gpu_usage and self.gpu_usage is not None:
+            if number_of_gpus == 0:
+                print(f"{bcolors.FAIL}NO GPU AVAILABLE !! we will use your cpu {bcolors.ENDC}")
+                self.gpu_usage = False
+        elif self.gpu_usage is None:
+            if number_of_gpus == 0:
+                self.gpu_usage = False
 
     def _remove_dogy_images(self):
         data_dir = self.data_folder
@@ -319,7 +329,6 @@ class BinaryImageClassificator:
             self.model.add(Dense(1, activation='sigmoid'))
             succsesful = True
 
-
         elif model_type == "x1":
             self.model = self._make_small_Xception_model(input_shape=(256, 256, 3), num_classes=2)
             succsesful = True
@@ -403,16 +412,23 @@ class BinaryImageClassificator:
     def save_model(self, model_file_name=None):
         if model_file_name is None:
             model_file_name = self.name
-        self.model.save(f"{model_file_name}.h5")
+        if model_file_name.endswith(".h5"):
+            self.model.save(model_file_name)
+        else:
+            self.model.save(f"{model_file_name}.h5")
 
     def load_model(self, name="imageclassification_model"):
-        self.model = load_model(f"{name}.h5")
+        if name.endswith(".h5"):
+            self.model = load_model(name)
+        else:
+            self.model = load_model(f"{name}.h5")
 
     @staticmethod
     def _oom_avoider():
-        gpus = tf.config.experimental.list_physical_devices("GPU")
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
+        if self.gpu_usage:
+            gpus = tf.config.experimental.list_physical_devices("GPU")
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
 
     def predict_from_files_path(self, image_file_path):
         img = cv2.imread(image_file_path)
