@@ -15,7 +15,7 @@ from tensorflow.keras.layers import Dense, Dropout, MaxPooling2D, Flatten, \
     Conv2D, GlobalAveragePooling2D, Activation, AveragePooling2D, BatchNormalization
 from tensorflow.keras.optimizers import SGD, Adam, Adamax, Adagrad
 from tensorflow.keras.models import load_model
-from tensorflow.keras.metrics import Precision, Recall, BinaryAccuracy
+from tensorflow.keras.metrics import Precision, Recall, CategoricalAccuracy
 
 import wandb
 from wandb.keras import WandbCallback
@@ -60,15 +60,14 @@ class VideoStream:
         self.stopped = True
 
 
-class BinaryImageClassificator:
-    def __init__(self, data_folder="data", model_name="imageclassification_model", first_class="1", second_class="2",
+class ImageClassificator:
+    def __init__(self, data_folder="data", model_name="imageclassification_model", number_of_classes=2,
+                 classes_name=None,
                  gpu=None):
         self.optimizer = None
         self.acc = None
         self.re = None
         self.pre = None
-        self.first_class = first_class
-        self.second_class = second_class
         self.tensorboard_callback = None
         self.logdir = None
         self.model = None
@@ -81,12 +80,21 @@ class BinaryImageClassificator:
         self.train_size = None
         self.data_iterator = None
         self.hist = None
+        self.clases = None
+        self.data = None
+        self.number_of_classes = number_of_classes
+        self._name_the_classes(classes_name)
         self.gpu_usage = gpu
         self._check_for_gpu_availability()
         self.data_folder = data_folder
         self.name = model_name
-        self.data = None
         self._oom_avoider()
+
+    def _name_the_classes(self, classes_name):
+        self.clases = [x for x in range(self.number_of_classes)]
+        if classes_name is not None:
+            for i in range(len(classes_name)):
+                self.clases[i] = classes_name[i]
 
     def _check_for_gpu_availability(self):
         number_of_gpus = len(tf.config.list_physical_devices('GPU'))
@@ -115,7 +123,8 @@ class BinaryImageClassificator:
                     os.remove(image_path)
 
     def _load_data(self):
-        self.data = tf.keras.utils.image_dataset_from_directory(self.data_folder)
+        self.data = tf.keras.utils.image_dataset_from_directory(self.data_folder, labels='inferred',
+                                                                class_names=self.clases)
         self.data_iterator = self.data.as_numpy_iterator()
         self.batch = self.data_iterator.next()
         print(f"{bcolors.OKGREEN}loading data succsesfuly{bcolors.ENDC}")
@@ -152,7 +161,7 @@ class BinaryImageClassificator:
         print(f"{bcolors.OKGREEN}prefetching data succsesfuly{bcolors.ENDC}")
 
     @staticmethod
-    def _make_small_Xception_model(input_shape, num_classes=2):
+    def _make_small_Xception_model(input_shape):
         inputs = keras.Input(shape=input_shape)
 
         x = tf.compat.v1.keras.layers.Rescaling(1.0 / 255)(inputs)
@@ -178,12 +187,12 @@ class BinaryImageClassificator:
         x = tf.compat.v1.keras.layers.BatchNormalization()(x)
         x = Activation("relu")(x)
         x = GlobalAveragePooling2D()(x)
-        if num_classes == 2:
+        if self.number_of_classes == 2:
             activision = "sigmoid"
             units = 1
         else:
             activision = "softmax"
-            units = num_classes
+            units = self.number_of_classes
         x = Dropout(0.5)(x)
         outputs = Dense(units, activation=activision)(x)
         return keras.Model(inputs, outputs)
@@ -201,7 +210,7 @@ class BinaryImageClassificator:
             self.model.add(MaxPooling2D())
             self.model.add(Flatten())
             self.model.add(Dense(256, activation='relu'))
-            self.model.add(Dense(1, activation='sigmoid'))
+            self.model.add(Dense(self.number_of_classes, activation='softmax'))
             succsesful = True
 
         elif model_type == "s2":
@@ -214,7 +223,7 @@ class BinaryImageClassificator:
             self.model.add(MaxPooling2D())
             self.model.add(Flatten())
             self.model.add(Dense(256, activation='relu'))
-            self.model.add(Dense(1, activation='sigmoid'))
+            self.model.add(Dense(self.number_of_classes, activation='softmax'))
             succsesful = True
 
         elif model_type == "s3":
@@ -228,7 +237,7 @@ class BinaryImageClassificator:
             self.model.add(Dropout(0.4))
             self.model.add(Flatten())
             self.model.add(Dense(256, activation='relu'))
-            self.model.add(Dense(1, activation='sigmoid'))
+            self.model.add(Dense(self.number_of_classes, activation='softmax'))
             succsesful = True
 
         elif model_type == "m1":
@@ -244,7 +253,7 @@ class BinaryImageClassificator:
             self.model.add(Flatten())
             self.model.add(Dense(512, activation='relu'))
             self.model.add(Dropout(0.5))
-            self.model.add(Dense(1, activation='sigmoid'))
+            self.model.add(Dense(self.number_of_classes, activation='softmax'))
             succsesful = True
 
         elif model_type == "l1" or model_type.lower() == "vgg-19":
@@ -274,7 +283,7 @@ class BinaryImageClassificator:
             self.model.add(Flatten())
             self.model.add(Dense(4096, activation='relu'))
             self.model.add(Dense(4096, activation='relu'))
-            self.model.add(Dense(1, activation='sigmoid'))
+            self.model.add(Dense(self.number_of_classes, activation='softmax'))
             succsesful = True
 
         elif model_type == "l1.1":
@@ -305,7 +314,7 @@ class BinaryImageClassificator:
             self.model.add(Dense(2048, activation="relu"))
             self.model.add(Dropout(0.1))
             self.model.add(Dense(2048, activation="relu"))
-            self.model.add(Dense(1, activation='sigmoid'))
+            self.model.add(Dense(self.number_of_classes, activation='softmax'))
             succsesful = True
 
         elif model_type == "l2":
@@ -326,11 +335,11 @@ class BinaryImageClassificator:
             self.model.add(Dense(2048, activation="relu"))
             self.model.add(Dropout(0.1))
             self.model.add(Dense(2048, activation="relu"))
-            self.model.add(Dense(1, activation='sigmoid'))
+            self.model.add(Dense(self.number_of_classes, activation='softmax'))
             succsesful = True
 
         elif model_type == "x1":
-            self.model = self._make_small_Xception_model(input_shape=(256, 256, 3), num_classes=2)
+            self.model = self._make_small_Xception_model(input_shape=(256, 256, 3))
             succsesful = True
 
         else:
@@ -342,7 +351,7 @@ class BinaryImageClassificator:
         if succsesful:
             print(self.model.summary())
 
-        self.model.compile(optimizer=optimizer, loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
+        self.model.compile(optimizer=optimizer, loss="sparse_categorical_crossentropy", metrics=['accuracy'])
 
     def _build_optimizer(self, learning_rate=0.00001, optimizer_type="adam"):
         if optimizer_type.lower() == "adam":
@@ -423,7 +432,13 @@ class BinaryImageClassificator:
         else:
             self.model = load_model(f"{name}.h5")
 
-    def predict(self, image, image_type=None, accuracy=False):
+    def _oom_avoider(self):
+        if self.gpu_usage:
+            gpus = tf.config.experimental.list_physical_devices("GPU")
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+
+    def predict(self, image, image_type=None, full_mode=False, accuracy=False):
         if image_type is None and type(image) is str:
             image_type = "path"
         if image_type == "path":
@@ -431,51 +446,30 @@ class BinaryImageClassificator:
         else:
             img = image
         resize = tf.image.resize(img, (256, 256))
-        yhat = self.model.predict(np.expand_dims(resize / 255, 0), verbose=0)
-        if accuracy:
-            if yhat > 0.5:
-                return self.first_class, ((yhat[0][0] - 0.5) * 2) * 100
+        res = self.model.predict(np.expand_dims(resize / 255, 0), verbose=0)
+        if full_mode:
+            res = np.array([res[0],
+                            self.clases])
+            res = res.transpose()
+            return res
+        else:
+            class_index = res.argmax()
+            result_class = self.clases[class_index]
+            result_percentage = res[0][class_index]
+            if accuracy:
+                return result_class, result_percentage
             else:
-                return self.second_class, (1 - (yhat[0][0] * 2)) * 100
-        else:
-            if yhat > 0.5:
-                return self.first_class
-            else:
-                return self.second_class
+                return result_class
 
-    def _oom_avoider(self):
-        if self.gpu_usage:
-            gpus = tf.config.experimental.list_physical_devices("GPU")
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-
-    def predict_from_files_path(self, image_file_path):
-        img = cv2.imread(image_file_path)
-        resize = tf.image.resize(img, (256, 256))
-        yhat = self.model.predict(np.expand_dims(resize / 255, 0))
-        if yhat > 0.5:
-            return self.first_class, ((yhat[0][0] - 0.5) * 2) * 100
-        else:
-            return self.second_class, (1 - (yhat[0][0] * 2)) * 100
-
-    def predict_from_imshow(self, img):
-        resize = tf.image.resize(img, (256, 256))
-        yhat = self.model.predict(np.expand_dims(resize / 255, 0))
-        if yhat > 0.5:
-            return self.first_class, ((yhat[0][0] - 0.5) * 2) * 100
-        else:
-            return self.second_class, (1 - (yhat[0][0] * 2)) * 100
-
-    def predict_from_numpy(self, img):
-        resize = tf.image.resize(img, (256, 256))
-        yhat = self.model.predict(np.expand_dims(resize / 255, 0))
-        if yhat > 0.5:
-            return self.first_class, ((yhat[0][0] - 0.5) * 2) * 100
-        else:
-            return self.second_class, (1 - (yhat[0][0] * 2)) * 100
+    def _fast_predict(self, img):
+        res = self.model.predict(img, verbose=0)
+        class_index = res.argmax()
+        result_class = self.clases[class_index]
+        result_percentage = res[0][class_index]
+        return result_class, result_percentage
 
     def gradio_preview(self, share=False, inbrowser=True):
-        demo = gr.Interface(self.predict_from_numpy,
+        demo = gr.Interface(self.predict,
                             inputs=gr.Image(label="your image"),
                             outputs=[gr.Label(label="class"),
                                      gr.Label(label="Accuracy")],
@@ -486,7 +480,7 @@ class BinaryImageClassificator:
     def evaluate_model(self):
         self.pre = Precision()
         self.re = Recall()
-        self.acc = BinaryAccuracy()
+        self.acc = CategoricalAccuracy()
         for batch in self.test.as_numpy_iterator():
             X, y = batch
             yhat = self.model.predict(X)
@@ -508,7 +502,7 @@ class BinaryImageClassificator:
 
             # Only run every 10 frames
             if frame_count % 10 == 0:
-                prediction = self.predict_from_imshow(frame)
+                prediction = self.predict(frame)
                 # Change the text position depending on your camera resolution
                 cv2.putText(frame, prediction, (20, 400), font, 1, font_color)
 
@@ -528,11 +522,13 @@ class BinaryImageClassificator:
         cv2.destroyAllWindows()
         print("Done")
 
-    def realtime_face_prediction(self, src=0):
+    def realtime_face_prediction(self, src=0, frame_rate=10):
         haar_cascade_file = pkg_resources.resource_filename(__name__, "cascades/haarcascade_frontalcatface.xml")
         detector = cv2.CascadeClassifier(haar_cascade_file)
         camera = cv2.VideoCapture(src)
+        label = ""
         # keep looping
+        frame_count = 0
         while True:
             # grab the current frame
             (grabbed, frame) = camera.read()
@@ -546,13 +542,14 @@ class BinaryImageClassificator:
                 # extract the ROI of the face from the grayscale image,
                 # resize it to a fixed 28x28 pixels, and then prepare the
                 # ROI for classification via the CNN
-                roi = frame[fY:fY + fH, fX:fX + fW]
-                roi = cv2.resize(roi, (256, 256))
-                roi = roi.astype("float") / 255.0
-                roi = img_to_array(roi)
-                roi = np.expand_dims(roi, axis=0)
-                prediction = str(self.model.predict(roi))
-                label = prediction
+                if frame_count % frame_rate == 0:
+                    roi = frame[fY:fY + fH, fX:fX + fW]
+                    roi = cv2.resize(roi, (256, 256))
+                    roi = roi.astype("float") / 255.0
+                    roi = img_to_array(roi)
+                    roi = np.expand_dims(roi, axis=0)
+                    prediction = str(self._fast_predict(roi))
+                    label = prediction
                 cv2.putText(frameClone, label, (fX, fY - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
                 cv2.rectangle(frameClone, (fX, fY), (fX + fW, fY + fH),
@@ -560,6 +557,7 @@ class BinaryImageClassificator:
             # show our detected faces along with smiling/not smiling labels
             cv2.imshow("Face", frameClone)
             # if the 'q' key is pressed, stop the loop
+            frame_count += 1
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
         # cleanup the camera and close any open windows

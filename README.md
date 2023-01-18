@@ -1,14 +1,14 @@
 
 # Custom Intents
 
-V0.7.5
+V0.7.6
 (it's still in buggy alpha)
 
 ## a simple way to create chatbots Ai, image classification Ai and more!!
 
-![Demo](images/img2.png)
+![Demo1](images/img2.png)
 
-![Demo](images/img.png)
+![Demo2](images/img.png)
 
 A package build on top of keras for creating and training deep learning chatbots (text classification), binary image classification and linear regression models in just three lines of code 
 
@@ -271,9 +271,156 @@ file.add_tag_app(tag="about")
 file.add_pattern_app("about")
 ```
 
+# ImageClassificator class
+
+the seccond class in CustomIntent package is ImageClassificator
+it let you create and train deep learning image classification models with just three line of code !!
+
+## init arguments
+```python
+ def __init__(self, data_folder="data", model_name="imageclassification_model", number_of_classes=2,
+                 classes_name=None, gpu=None):
+```
+
+data_folder : the path to where you located your data
+
+model_name : name your model
+
+number_of_classes : number of difrent classes you have in your data (you should put the pictures of every class in a sub folder in your data folder)
+
+classes_name : a list of names correspunding to your classes (they should be the same as the folder name of correspunding data folder for example if you have 3 sub folder in your data folder as banana apple pineapple you should pass ["banana", "apple", "pineapple"])
+
+gpu : you can pass True or False if you dont pass anything it will try to use your gpu if you have a cuda enaibled graphic card and you have cudatoolkit and cuDNN installed and if you dont it will use your cpu
+
+## Training
+
+you can start training your model with one function call train_model
+
+training model arguments :
+```python
+def train_model(self, epochs=20, model_type="s1", logdir=None,
+                optimizer_type="adam", learning_rate=0.00001,
+                class_weight=None, prefetching=False, plot_model=True,
+                validation_split=0.2):
+```
+
+epoch : an epoch basicly means training the neural network with all the training data for one cycle and this arguament says how many of this circles it will go
+
+model_type : you can select one of the defined models (we will look at the available models later on)
+
+logdir : a directory to hold your tensorboard log files you can leave is empty if you dont care
+
+optimizer_type : you can only choose adam right now
+
+learning_rate : Learning rate is a hyper-parameter that controls the weights of our neural network with respect to the loss gradient. It defines how quickly the neural network updates the concepts it has learned. (in simple terms if its bigger our model learn faster but it can go of track faster)
+
+class_weight : if you have an unbalanced dataset you can path a dictionary with the weight that you what to assosiate with every class () 
+
+prefetching : prefetching data
+
+plot_model : it will plot the model architecture for you 
+
+validation_split : you can split a portion of your data for validation only (model will not get trained on them) it should be float between 0 and 1 (i will recommend to not create a validation split unless you have a really huge data set with lots of similar patterns)
+
+## save_model
+
+it will save your model a .h5 file
+
+```python
+def save_model(self, model_file_name=None):
+```
+
+model_name : if its None (defualt), it will save the files like (model_name.h5) where the model_name is the name you specified in the first place
+
+## load_model
+
+it will load a model from those three files
+
+```python
+def load_model(self, name="imageclassification_model"):
+```
+
+model_name : if its None (defualt), it will look for files like (imageclassification_model.h5) 
+
+## predict
+
+now you can predict 
+
+```python
+def predict(self, image, image_type=None, full_mode=False, accuracy=False):
+```
+
+image : a path to an image file or a numpy array of the image or a cv2 image
+
+image_type : if its None (defualt), it will it will try to detect if the image is a cv2 image or a numpy array of the image or a path to the image
+
+full_mode : if you set it to true it will return every class and its probability
+
+accuracy : if you set it to true it will return a tuple of the class name and the probability
+
+(if both full_mode and accuracy set to false (defualt behavier) it will just return the most likly class name)
+
+## realtime prediction
+
+it will predict from a live video feed (it will open a live cv2 video feed)
+
+```python
+def realtime_prediction(self, src=0):
+```
+
+src : if you have multiple webcams or virtual webcams it will let you choose from them if you only have one live it empty
+
+## realtime face prediction
+
+its exacly like the realtime_prediction() method but it will detect facec with a haarcascadde and will feed the model with the facec to predict
+
+```python
+def realtime_face_prediction(self, src=0, frame_rate=5):
+```
+
+src : if you have multiple webcams or virtual webcams it will let you choose from them if you only have one live it empty
+
+frame_rate : its the number of frames to skip before predicting again
+
+
+## gradio_preview
+
+it will open up a nice gui for testing your model in your browser
+
+```python
+def gradio_preview(self, share=False, inbrowser=True):
+```
+
+share : if set to True it will make the demo public
+
+inbrowser : it will aoutomaticlly open a new browser page if set to True
+
+## example of using BinaryImageClassificator
+
+in this example i have a folder in data/full that contains 4 sub folders (beni, khodm, matin, parsa) and in every one of them i have a lot of pictures of my friends (the folder name corredpunds to their names for example in beni folder there are beni's pictures, btw khodm means myself in my languge) and i want to train a model to detect which one of us we are in the picture
+
+```python
+from CustomIntents import ImageClassificator
+
+model = ImageClassificator(model_name="test_m1", data_folder="data/full", number_of_classes=4, classes_name=["beni", "khodm", "matin", "parsa"])
+model.train_model(epochs=10, model_type="m1", logdir="logs", learning_rate=0.0001, prefetching=False)
+model.save_model(model_file_name="test_m1")
+```
+```python
+from CustomIntents import BinaryImageClassificator
+
+model = ImageClassificator(model_name="test_m1", data_folder="data/full", number_of_classes=4, classes_name=["beni", "khodm", "matin", "parsa"])
+model.load_model(name="test_m1")
+result = model.realtime_face_prediction()
+```
+![Demo3](images/realtime_prediction_example.png)
+and as you see in the picture above you can see it under the that it is me in the picture with a really high accuracy
+
+
+
 # BinaryImageClassificator class
 
-the first class in CustomIntent package is BinaryImageClassificate
+the third class in CustomIntent package is BinaryImageClassificator
 it let you create and train deep learning image classification models with just three line of code !!
 
 ## Init arguaments
@@ -341,7 +488,22 @@ def load_model(self, name="imageclassification_model"):
 
 model_name : if its None (defualt), it will look for files like (imageclassification_model.h5) 
 
-## predict from file path
+## predict
+
+now you can predict 
+
+```python
+def predict(self, image, image_type=None, accuracy=False):
+```
+
+image : a path to an image file or a numpy array of the image or a cv2 image
+
+image_type : if its None (defualt), it will it will try to detect if the image is a cv2 image or a numpy array of the image or a path to the image
+
+accuracy : if you set it to true it will return a tuple of the class name and the probability
+
+
+## predict from file path (legacy)
 
 it will predict what class the image blongs to from a path
 
@@ -353,7 +515,7 @@ image_file_path : the path of the image you want to predict
 
 it will return the name of the class and the percentage that its correct
 
-## predict from imshow
+## predict from imshow (legacy)
 
 it will predict what class the image blongs to from a cv2 object
 
