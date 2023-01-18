@@ -423,8 +423,7 @@ class BinaryImageClassificator:
         else:
             self.model = load_model(f"{name}.h5")
 
-    @staticmethod
-    def _oom_avoider():
+    def _oom_avoider(self):
         if self.gpu_usage:
             gpus = tf.config.experimental.list_physical_devices("GPU")
             for gpu in gpus:
