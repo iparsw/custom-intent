@@ -247,6 +247,25 @@ class BinaryImageClassificator:
             self.model.add(Dense(1, activation='sigmoid'))
             succsesful = True
 
+        elif model_type == "m2":
+            self.model = Sequential()
+            self.model.add(Conv2D(16, (5, 5), 1, padding="same", activation='relu', input_shape=(256, 256, 3)))
+            self.model.add(Conv2D(32, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(64, (3, 3), 1, activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Dropout(0.25))
+            self.model.add(Conv2D(128, (1, 1), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(128, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Conv2D(64, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(MaxPooling2D())
+            self.model.add(Conv2D(32, (3, 3), 1, padding="same", activation='relu'))
+            self.model.add(Dropout(0.25))
+            self.model.add(Flatten())
+            self.model.add(Dense(512, activation='relu'))
+            self.model.add(Dropout(0.5))
+            self.model.add(Dense(1, activation='sigmoid'))
+            succsesful = True
+
         elif model_type == "l1" or model_type.lower() == "vgg-19":
             self.model = Sequential()
             self.model.add(Conv2D(64, (3, 3), 1, padding="same", activation='relu', input_shape=(256, 256, 3)))

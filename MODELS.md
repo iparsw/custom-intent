@@ -54,6 +54,8 @@ s3 : Conv2D(32 node)–MaxPooling2D–Conv2D(32 node)–MaxPooling2D–Conv2D(64
 
 m1 : Conv2D(32 node)–Conv2D(32 node)–MaxPooling2D–Dropout(25%)–Conv2D(64 node)–Conv2D(64 node)–MaxPooling2D–Dropout(25%)–Flatten–Dense(512 node)–Dropout(50%)–Dense(classification)
 
+m2 : Conv2D(16 node)–Conv2D(32 node)–Conv2D(64 node)–MaxPooling2D–Dropout(25%)–Conv2D(128 node (1,1 kernal))–Conv2D(128 node)–Conv2D(64 node)–MaxPooling2D–Conv2D(32 node)–Dropout(25%)–Flatten–Dense(512 node)–Dropout(50%)–Dense(classification)
+
 l1 : a vgg-19 clone (Conv2d(64 node)*2-MaxPooling2D-Conv2d(128 node)*2-MaxPooling2D-Conv2d(256 node)*4-MaxPooling2D-Conv2d(512 node)*4-MaxPooling2D-Conv2d(512 node)*4-MaxPooling2D-Dropout(0.1)-Flatten-Dense(4096)-Dence(4096)-Dense(classification))
 
 l1.1 : an improved vgg-19(Conv2d(64 node)*2-MaxPooling2D-Conv2d(128 node)*2-MaxPooling2D-Conv2d(256 node)*4-MaxPooling2D-Conv2d(512 node)*4-MaxPooling2D-Conv2d(512 node)*4-Batchnormalization-globalAvaragepooling-Dense(2048)-Dropout(0.1)-Dense(2048)-Dense(classification))

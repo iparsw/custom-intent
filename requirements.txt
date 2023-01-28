@@ -1,6 +1,6 @@
 customtkinter==5.0.3
 gmpy2==2.1.5
-gradio==3.16.1
+gradio==3.16.2
 keras==2.10.0
 Keras_Preprocessing==1.1.2
 matplotlib==3.6.2

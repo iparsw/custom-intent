@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="CustomIntents",
-    version="0.7.6",
+    version="0.8.0",
     author="Parsa Roshanak (iparsw)",
     author_email="parsaroshanak@gmail.com",
     long_description=long_description,
@@ -17,7 +17,7 @@ setuptools.setup(
     package_data={'': ["cascades/haarcascade_frontalcatface.xml"]},
     install_requires=[
         "gmpy2==2.1.5",
-        "gradio==3.16.1",
+        "gradio==3.16.2",
         "keras==2.10.0",
         "Keras_Preprocessing==1.1.2",
         "matplotlib==3.6.2",

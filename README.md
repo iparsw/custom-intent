@@ -1,14 +1,26 @@
 
 # Custom Intents
 
-V0.7.6
+V0.8.0
 (it's still in buggy alpha)
 
 ## a simple way to create chatbots Ai, image classification Ai and more!!
 
+# installation
+
+you can install the package from pypi (pip)
+
+```commandline
+pip install CustomIntents
+```
+
+## examples
+
 ![Demo1](images/img2.png)
 
 ![Demo2](images/img.png)
+
+
 
 A package build on top of keras for creating and training deep learning chatbots (text classification), binary image classification and linear regression models in just three lines of code 
 
@@ -278,8 +290,12 @@ it let you create and train deep learning image classification models with just 
 
 ## init arguments
 ```python
- def __init__(self, data_folder="data", model_name="imageclassification_model", number_of_classes=2,
-                 classes_name=None, gpu=None):
+def __init__(self, data_folder="data",
+                 model_name="imageclassification_model",
+                 number_of_classes=2,
+                 classes_name=None,
+                 gpu=None, 
+                 checkpoint_filepath='/tmp/checkpoint_epoch:{epoch}'):
 ```
 
 data_folder : the path to where you located your data
@@ -292,16 +308,28 @@ classes_name : a list of names correspunding to your classes (they should be the
 
 gpu : you can pass True or False if you dont pass anything it will try to use your gpu if you have a cuda enaibled graphic card and you have cudatoolkit and cuDNN installed and if you dont it will use your cpu
 
+checkpoint_filepath : path to where you want your checkpoints
+
 ## Training
 
 you can start training your model with one function call train_model
 
 training model arguments :
 ```python
-def train_model(self, epochs=20, model_type="s1", logdir=None,
-                optimizer_type="adam", learning_rate=0.00001,
-                class_weight=None, prefetching=False, plot_model=True,
-                validation_split=0.2):
+def train_model(self, epochs=20,
+                    model_type="s1",
+                    logdir=None,
+                    optimizer_type="adam",
+                    learning_rate=0.00001,
+                    class_weight=None,
+                    prefetching=False,
+                    plot_model=True,
+                    validation_split=0.2,
+                    test_split=0,
+                    augment_data=False,
+                    tensorboard_usage=False,
+                    stop_early=False,
+                    checkpoint=False):
 ```
 
 epoch : an epoch basicly means training the neural network with all the training data for one cycle and this arguament says how many of this circles it will go
@@ -321,6 +349,14 @@ prefetching : prefetching data
 plot_model : it will plot the model architecture for you 
 
 validation_split : you can split a portion of your data for validation only (model will not get trained on them) it should be float between 0 and 1 (i will recommend to not create a validation split unless you have a really huge data set with lots of similar patterns)
+
+augment_data : if set to true the model will also be trained on augmented data 
+
+tensorboard_usage : it will use tensorboard
+
+stop_early : if set to true it will stop training if validation loss is the same or increasing for more than 5 epochs
+
+checkpoint : if set to true it will save checkpoints if the validation loss is the lovest ever seen
 
 ## save_model
 
@@ -352,7 +388,7 @@ def predict(self, image, image_type=None, full_mode=False, accuracy=False):
 
 image : a path to an image file or a numpy array of the image or a cv2 image
 
-image_type : if its None (defualt), it will it will try to detect if the image is a cv2 image or a numpy array of the image or a path to the image
+image_type : if its None (defualt), it will try to detect if the image is a cv2 image or a numpy array of the image or a path to the image
 
 full_mode : if you set it to true it will return every class and its probability
 
@@ -360,9 +396,32 @@ accuracy : if you set it to true it will return a tuple of the class name and th
 
 (if both full_mode and accuracy set to false (defualt behavier) it will just return the most likly class name)
 
-## realtime prediction
+## predict_face
 
-it will predict from a live video feed (it will open a live cv2 video feed)
+```python
+    def predict_face(self, img, image_type=None, full_mode=False,
+                     accuracy=False, return_picture=False,
+                     save_returned_picture=False, saved_returned_picture_name="test.jpg",
+                     show_returned_picture=False):
+```
+
+img : a path to an image file or a numpy array of the image or a cv2 image
+
+image_type : if its None (defualt), it will try to detect if the image is a cv2 image or a numpy array of the image or a path to the image
+
+full_mode : if you set it to true it will return every class and its probability
+
+accuracy : if you set it to true it will return a tuple of the class name and the probability
+
+return_picture : if set to true it will return a picture with faces in rectangles and their predicted class writen on top of them
+
+save_returned_picture : if set to True it will save the returned picture
+
+saved_returned_picture_name : if you set save_returned_picture to true you can use this to especifie the name of the saved picture
+
+show_returned_picture : if set to true it will open the returned picture in a cv2 preview
+
+## realtime_prediction
 
 ```python
 def realtime_prediction(self, src=0):
@@ -388,14 +447,16 @@ frame_rate : its the number of frames to skip before predicting again
 it will open up a nice gui for testing your model in your browser
 
 ```python
-def gradio_preview(self, share=False, inbrowser=True):
+def gradio_preview(self, share=False, inbrowser=True, predict_face=False):
 ```
 
 share : if set to True it will make the demo public
 
 inbrowser : it will aoutomaticlly open a new browser page if set to True
 
-## example of using BinaryImageClassificator
+predict_face : if set to True it will look for faces and feed them to the model 
+
+## example of using ImageClassificator
 
 in this example i have a folder in data/full that contains 4 sub folders (beni, khodm, matin, parsa) and in every one of them i have a lot of pictures of my friends (the folder name corredpunds to their names for example in beni folder there are beni's pictures, btw khodm means myself in my languge) and i want to train a model to detect which one of us we are in the picture
 
@@ -416,11 +477,80 @@ result = model.realtime_face_prediction()
 ![Demo3](images/realtime_prediction_example.png)
 and as you see in the picture above you can see it under the that it is me in the picture with a really high accuracy
 
+# StyleTransformer class
 
+the fourth class in CustomIntent package is StyleTransformer
+it let you transform an image to the style of another image
+
+![Demo3](images/style_transformer.png)
+
+## init arguments
+
+```python
+def __init__(self, image_path=None,
+             style_reference_image_path=None,
+             result_prefix="test_generated"):
+```
+
+image path : the path to the original image
+
+style_reference_image_path : the path to the style reference image
+
+result_prefix : the prefix for the result file
+
+## transform method
+
+the main method of this class
+
+```python
+def transfer(self, iterations=4000, iteration_per_save=100):
+```
+
+iterations : the number of iterations
+
+iteration_per_save : save every _ iteration (where _ is the number you pass)
+
+## gradio_preview method
+
+a browser based app to use this class
+
+```python
+def gradio_preview(self, share=False, inbrowser=True):
+```
+
+share : if set to True it will make the demo public
+
+inbrowser : it will aoutomaticlly open a new browser page if set to True
+
+## example of using StyleTransformer
+
+### passing the path of base and reference image
+
+```python
+from CustomIntents import StyleTransformer
+
+model = StyleTransformer(image_path="base_image.jpg", style_reference_image_path="style_reference_image.jpg")
+model.transfer(iterations=500, iteration_per_save=50)
+```
+
+this code will perform the teransformation for 500 times and save them every 50 steps
+
+### Using gradio preview
+
+```python
+from CustomIntents import StyleTransformer
+
+model = StyleTransformer()
+model.gradio_preview()
+```
+![Demo3](images/dtyleTransformer_gradio.png)
+
+#### *this model is slow so use reasonable iteration counts
+don't use ridiculous numbers like 4000 like me, it took about 15 minutes on a 1660ti
 
 # BinaryImageClassificator class
 
-the third class in CustomIntent package is BinaryImageClassificator
+the fourth class in CustomIntent package is BinaryImageClassificator
 it let you create and train deep learning image classification models with just three line of code !!
 
 ## Init arguaments
@@ -452,9 +582,9 @@ def train_model(self, epochs=20, model_type="s1", logdir=None,
 
 epoch : an epoch basicly means training the neural network with all the training data for one cycle and this arguament says how many of this circles it will go
 
-model_type : you can select one of the defined models (we will look at the available models later on)
+model_type : you can select one of the defined models (read MODELS.md for more information)
 
-logdir : a directory to hold your tensorboard log files you can leave is empty if you dont care
+logdir : a directory to hold your tensorboard log files you can leave is empty if you don't care
 
 optimizer_type : you can only choose adam right now
 
@@ -574,22 +704,6 @@ from CustomIntents import BinaryImageClassificator
 model.load_model("models/test1")
 model.realtime_face_prediction()
 ```
-
-## models
-
-BinaryImageClassificator class have a verity of predefined models including
-
-s1 : a small but powrful model
-
-s1a : s1 but with augmentong data in random ways preventing the risk of overfiting to an extand
-
-s2 :
-
-s3 :
-
-m1 :
-
-for more nformation read MODELS.md file
 
 # PLinearRegression class
 

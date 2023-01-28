@@ -616,3 +616,54 @@ def matrix_multiplication2by2(matrix1, matrix2):
 # ecualidean_distance
 def ecualidean_distance(x1, x2):
     return np.sqrt(np.sum((x1 - x2) ** 2))
+
+
+def int_value_check(digit, start=None, end=None):
+    if type(digit) is not int:
+        if type(digit) == str and digit.isdigit():
+            digit = int(digit)
+        else:
+            return False
+    # check if digit is big enough
+    if start is not None:
+        if digit < start:
+            return False
+    # check if digit is small enough
+    if end is not None:
+        if digit > end:
+            return False
+    return True
+
+
+def float_value_check(number, start=None, end=None):
+    if type(number) is not float:
+        if type(number) == str and is_float(number):
+            number = float(number)
+        else:
+            return False
+    # check if number is big enough
+    if start is not None:
+        if number < start:
+            return False
+    # check if number is small enough
+    if end is not None:
+        if number > end:
+            return False
+    return True
+
+
+def string_value_check(string, valids=None):
+    if type(string) is not str:
+        return False
+    # check if string is valid
+    if valids is not None:
+        if string not in valids:
+            return False
+    return True
+
+
+def boolean_value_check(boolean):
+    if type(boolean) is not bool:
+        return False
+    return True
+
