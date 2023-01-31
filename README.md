@@ -120,21 +120,21 @@ def train_model(self, epoch=None, batch_size=5, learning_rate=None,
                 validation_split=0, optimizer=None, accuracy_and_loss_plot=True):
 ```
 
-epoch : an epoch basicly means training the neural network with all the training data for one cycle and this arguament says how many of this circles it will go
+epoch: An epoch refers to one cycle of training the neural network with all the training data. This argument specifies the number of cycles that the network will undergo.
 
-batch_size : Integer or None. Number of samples per gradient update (you can just ignore this)
+batch_size: An integer or None. This determines the number of samples per gradient update. You can ignore this argument if you like.
 
-learning_rate : Learning rate is a hyper-parameter that controls the weights of our neural network with respect to the loss gradient. It defines how quickly the neural network updates the concepts it has learned. (in simple terms if its bigger our model learn faster but it can go of track faster)
+learning_rate: The learning rate is a hyper-parameter that controls the weights of the neural network with respect to the loss gradient. It defines how quickly the network updates the concepts it has learned. In simple terms, a larger learning rate makes the model learn faster but it can also deviate from the correct path more easily.
 
-ignore_letters : a list of letters you want to ignore (by defualt it will ignore (? . , !) (you can pas a empty list if you dont want to ignore (?.,!)))
+ignore_letters: A list of letters that you want to ignore. By default, it ignores the characters (? . , !). You can pass an empty list if you don't want to ignore any characters.
 
-timeIt : it will just time the training
+timeIt: This argument times the training process.
 
-model_type : you can select one of the defined models (we will look at the available models later on)
+model_type: You can select one of the predefined models (which will be described later).
 
-validation_split : you can split a portion of your data for validation only (model will not get trained on them) it should be float between 0 and 1 (i will recommend to not create a validation split unless you have a really huge data set with lots of similar patterns)
+validation_split: You can split a portion of your data for validation only, meaning the model will not be trained on these samples. This argument should be a float between 0 and 1. I recommend not creating a validation split unless you have a very large dataset with many similar patterns.
 
-optimizer : you can choose beetwin SGD, Adam, Adamx and Adagard
+optimizer: You can choose between SGD, Adam, Adamx, and Adagard.
 
 ## save_model
 
