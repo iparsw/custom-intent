@@ -35,7 +35,7 @@ import pkg_resources
 import gradio as gr
 
 from CustomIntents.Pfunction.Pfunctions import string_value_check, float_value_check, boolean_value_check, \
-    int_value_check
+    int_value_check, count_subdictionaries
 
 available_models = ["s1", "s1a", "s2", "s3", "m1", "m2", "l1", "vgg-19", "l1.1", "l2", "x1"]
 available_optimizers = ["adam"]
@@ -115,9 +115,19 @@ class ImageClassificator:
         self._name_the_classes(classes_name)
         self.gpu_usage = gpu
         self._check_for_gpu_availability()
+        self._check_the_data_folder()
         self.data_folder = data_folder
         self.name = model_name
         self._oom_avoider()
+
+    def _check_the_data_folder(self):
+        data_folde_exists = os.path.exists(self.data_folder)
+        if not data_folde_exists:
+            raise ValueError("data_folder does not exist")
+        number_of_subdirectories = count_subdictionaries(self.data_folder)
+        if not number_of_subdirectories == self.number_of_classes:
+            raise ValueError(
+                "number of subdirectories in data_folder is not equal to number of classes please check you data folder")
 
     def _name_the_classes(self, classes_name):
         self.clases = [x for x in range(self.number_of_classes)]

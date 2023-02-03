@@ -1,7 +1,7 @@
 
 # Custom Intents
 
-V0.8.0
+V0.8.1
 (it's still in buggy alpha)
 
 ## a simple way to create chatbots Ai, image classification Ai and more!!
@@ -778,6 +778,42 @@ def make_prediction(self, x):
 x : your input data either in a numerical form or a numpy array containing multiple numerical values
 
 it will return either a float (if you input is just a numerical value) or a numpy array containing multiple floats
+
+# scanner moudule
+
+this moudule is created for helping you scan faces this is helpful for person recognition emotion recognition etc.
+
+## face_scanner function
+```python
+def face_scanner(category: str,                  # category name
+                 sub_category: str,              # sub category name
+                 base_dir: str,                  # base directory path
+                 number_of_photos: int,          # number of photos to take
+                 number_of_frames_to_skip: int,  # number of frames to skip before taking images 
+                 file_name: str,                 # file name
+                 image_size: int = 256,          # width and height of image (it will be square)
+                 haar_file: str = None,          # directory containing haarcascade
+                 camera: int = 0,                # camera
+                 colored: bool = False):         # True if you want to save the colored image
+```
+
+## facsScannerCliApp
+this function will command app for facsScanner
+
+```python
+from CustomIntents import scanner
+
+scanner.facsScannerCliApp()
+```
+
+## faceScannerGuiApp
+it will command start a GUI app for faceScanner
+
+```python
+from CustomIntents import scanner
+
+scanner.faceScannerGuiApp()
+```
 
 <h3>Visitors :</h3>
 <br>

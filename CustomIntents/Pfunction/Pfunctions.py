@@ -1,3 +1,4 @@
+import os
 from functools import wraps
 import sys
 from decimal import Decimal, localcontext
@@ -667,3 +668,6 @@ def boolean_value_check(boolean):
         return False
     return True
 
+
+def count_subdictionaries(folder_path):
+    return len([entry for entry in os.scandir(folder_path) if entry.is_dir])
