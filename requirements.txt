@@ -11,5 +11,5 @@ opencv_python==4.7.0.68
 setuptools==65.7.0
 tensorflow==2.10.0
 wandb==0.13.7
-future==0.18.2
+future==0.18.3
 pillow==9.3.0

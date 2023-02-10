@@ -29,9 +29,9 @@ setuptools.setup(
         "wandb==0.13.7",
         "opencv-python==4.7.0.68",
         "music21==8.1.0",
-        "future==0.18.2",
+        "future==0.18.3",
         "customtkinter==5.0.3",
-        "future==0.18.2",
+        "future==0.18.3",
         "pillow==9.3.0"
 
     ]
