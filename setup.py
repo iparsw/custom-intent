@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="CustomIntents",
-    version="0.8.1",
+    version="0.8.2",
     author="Parsa Roshanak (iparsw)",
     author_email="parsaroshanak@gmail.com",
     long_description=long_description,
@@ -30,7 +30,9 @@ setuptools.setup(
         "opencv-python==4.7.0.68",
         "music21==8.1.0",
         "future==0.18.2",
-        "customtkinter==5.0.3"
+        "customtkinter==5.0.3",
+        "future==0.18.2",
+        "pillow==9.3.0"
 
     ]
 )

@@ -1,7 +1,7 @@
 
 # Custom Intents
 
-V0.8.1
+V0.8.2
 (it's still in buggy alpha)
 
 ## a simple way to create chatbots Ai, image classification Ai and more!!
@@ -25,6 +25,90 @@ pip install CustomIntents
 A package build on top of keras for creating and training deep learning chatbots (text classification), binary image classification and linear regression models in just three lines of code 
 
 the package is inspired by NeuralNine, neuralintents package a packege that let you build chatbot models with 3 lines of code
+
+# ImageGenerator class
+you can easily use state of the art StableDiffiusion model with this class
+
+## Init arguments
+```python
+def __init__(self, *,
+             model: str = "StableDiffusion",
+             img_height: int = 256,
+             img_width: int = 256,
+             jit_compile: bool = False,
+             cpu_only: bool = False):
+```
+
+model : for now only StableDiffusion is available
+
+img_height : it's the height of the genarated image it should be a multiple of 128
+
+img_width : it's the width of the genarated image it should be a multiple of 128
+
+jit_comple : it's a boolean indicating using just in time compliling
+
+cpu_only : it's a boolean indicating whether to use CPU only or GPU
+
+note every argument should be passed as an keyword argument
+
+## generate method
+
+```python
+def generate(self, *,
+             prompt: str = "Iron man making breakfast",
+             batch_size: int = 1,
+             filename: str = "sample",
+             num_steps: int = 50):
+```
+
+prompt : it's the prompt to create the image from
+
+batch_size : how many of images to create
+
+filename : the name of file to save
+
+num_steps : the number of steps to run the image through the model bigger the number it will generate better images but also it will take longer to generate
+
+## gradio_preview method
+
+this method will create a gradio preview
+
+ this method doesn't get any arguments
+
+## examples of using this class 
+
+### creating a gradio preview
+
+```python
+from CustomIntents import ImageGenerator
+
+model = ImageGenerator(model="StableDiffusion",
+                       img_width=512,
+                       img_height=512,
+                       cpu_only=True,
+                       jit_compile=True)
+
+model.gradio_preview()
+```
+
+### generating an image
+
+this code will generate two images and save them as "a sample image.jpg"  
+
+```python
+from ImageGenerator import ImageGenerator
+
+model = ImageGenerator(model="StableDiffusion",
+                       img_width=512,
+                       img_height=512,
+                       cpu_only=True,
+                       jit_compile=True)
+
+model.generate(prompt="a cat lying on a bed",
+               batch_size=2,
+               filename="a sample image",
+               num_steps=50)
+```
 
 ### Setting Up A Basic Chatbot
 
