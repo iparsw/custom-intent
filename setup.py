@@ -25,7 +25,7 @@ setuptools.setup(
         "numpy==1.23.5",
         "opencv_python==4.7.0.68",
         "setuptools==65.7.0",
-        "tensorflow==2.10.0",
+        "tensorflow==2.11.1",
         "wandb==0.13.7",
         "opencv-python==4.7.0.68",
         "music21==8.1.0",
