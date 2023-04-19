@@ -2,7 +2,8 @@
 # Custom Intents
 
 V1.0.0
-(it's still in buggy alpha)
+
+(it's still a bit buggy)
 
 ## a simple way to create chatbots Ai, image classification Ai, image generation Ai, image supper resolution Ai and more!!
 
