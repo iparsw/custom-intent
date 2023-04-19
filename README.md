@@ -1,10 +1,10 @@
 
 # Custom Intents
 
-V0.8.2
+V1.0.0
 (it's still in buggy alpha)
 
-## a simple way to create chatbots Ai, image classification Ai and more!!
+## a simple way to create chatbots Ai, image classification Ai, image generation Ai, image supper resolution Ai and more!!
 
 # installation
 
@@ -22,9 +22,183 @@ pip install CustomIntents
 
 
 
-A package build on top of keras for creating and training deep learning chatbots (text classification), binary image classification and linear regression models in just three lines of code 
+A package build on top of keras for creating and training deep learning chatbots (text classification), image classification, image generation Ai, image super resolution, style transforming and linear regression models in just three lines of code 
 
 the package is inspired by NeuralNine, neuralintents package a packege that let you build chatbot models with 3 lines of code
+
+# list of features:
+* [SuperRes class](#superres-class)
+* [ImageGenerator class](#imagegenerator-class)
+* [ChatBot class](#chatbot-class)
+* [JsonIntents](#jsonintents-class)
+* [ImageClassificator class](#imageclassificator-class)
+* [StyleTransformer class](#styletransformer-class)
+* [BinaryImageClassificator](#binaryimageclassificator-class)
+* [PLinearRegression class](#plinearregression-class)
+* [scanner moudule](#scanner-moudule)
+
+# SuperRes class
+
+## Init arguments
+```python
+def __init__(self, input_size: tuple = (300, 300),
+             upscale_factor: int = 3,
+             cpu_only: bool = False):
+```
+
+input_size : this is only required when training or finetuning
+
+upscale_factor : the upscale factor
+
+cpu_only : whether to use only CPU or not
+
+## upscale_image method
+```python
+def upscale_image(self, img,
+                  save_name: str = None,
+                  save_image: bool = True):
+```
+img : the image you want to upscale
+
+save_image : whether to save the image
+
+save_name : the name of the saved file
+
+## upscale_image_from_path method
+```python
+def upscale_image_from_path(self, img_path,
+                            save_name: str = None,
+                            save_image: bool = True)
+```
+its like upscale_image method except that it requires a path to the image
+
+## load_training_data method
+```python
+def load_training_data(self, dataset_path: str,
+                       validation_split: float = 0.2,
+                       batch_size: int = 8)
+```
+dataset_path : path to the training and validation data directory
+
+validation_split : a float between 0 and 1 where the validation split is specified
+
+batch_size : batch size
+
+## train method
+```python
+def train(self, lr: float = 0.001,
+          optimizer: str = "Adam",
+          epochs: int = 50,
+          ESPCNCallback_usage: bool = True,
+          ESPCNCallback_test_path: str = "test",
+          epoch_per_psnr: int = 20,
+          psnr_plot: bool = True,
+          model_type: str = "xs1",
+          loss_fns: list = None,
+          loss_fns_weight: list = None):
+```
+optimizer : name of the optimizer (corently supported optimizers are : Adam, Adagrad, Adamax, Adadelta, SGD, RMSprop, Nadam)
+
+epochs : number of epochs to train
+
+ESPCNCallback_usage : wether to use ESPCNCallback or not
+
+ESPCNCallback_test_path : a path to the test data directory for ESPCNCallback
+
+epoch_per_psnr : if you use ESPCNCallback it will show a sample every few epochs you can choose that number here
+
+psnr_plot : if you use ESPCNCall you can turn plutting a sample off
+
+model_type : the type of the model (there are some different types in this package but for now i recommend using using the diffault xs1)
+
+loss_fns : a list containing loss functions you want to use if you want only one loss function to use you can pass a list with only on loss functions 
+
+(corently supported loss functions are : mse, mae, mape, ssim, psnr, ipcusl (this is a custom loss function for more information read IPCUSL.md), charbonnier, tv (total variation), tvd (total variation difference))
+
+loss_fns_weight : if you use multiple loss functions the model will calculate their weighted sum and this is a list that contains their sum in this order (mse,mae,mape,ssim,psnr,ipcusl,charbonnier,tv,tvd)
+
+## fine_tuning method
+```python
+def fine_tuning(self, lr: float = 0.001,
+                epochs: int = 50,
+                model_name: str = "super_res",
+                ESPCNCallback_usage: bool = True,
+                ESPCNCallback_test_path: str = "test",
+                epoch_per_psnr: int = 20,
+                psnr_plot: bool = True,
+                recompile: bool = False,
+                optimizer: str = None,
+                loss_fns: list = None,
+                loss_fns_weight: list = None)
+```
+its almost equivalent to the train method except you should load a model first
+
+## load_model method
+
+```python
+def load_model(self, model_name: str = "super_res")
+```
+
+model_name : the name of the model
+
+## save_model method
+
+```python
+def save_model(self, model_name: str = "super_res")
+```
+
+model_name : the name of the model
+
+## benchmark method
+
+```python
+def benchmark(self, image_path: str = "testimage.jpg",
+              input_size: tuple = (300, 300))
+```
+
+this method will benchmark the model based on a single image
+
+input_size : the image will be resized to the given size image and then upscaled by model
+
+## benchmark_from_directory method
+
+```python
+def benchmark_from_directory(self, image_directory_path: str = "test",
+                             input_size: tuple = None)
+```
+
+this method will benchmark the model based on a directory of images
+
+input_size : the image will be resized to the given size image and then upscaled by model
+
+## example of training a model
+```python
+from CustomIntents import SuperRes
+
+model = SuperRes(input_size=(300, 300), upscale_factor=3)
+model.load_training_data(dataset_path="dataset", batch_size=8)
+model.train(epochs=5, model_type="xs1", psnr_plot=True, loss_fns=["IPCUSL"], epoch_per_psnr=4)
+```
+## example of fine tuning a model
+```python
+from CustomIntents import SuperRes
+
+model = SuperRes(input_size=(100, 100), upscale_factor=3)
+model.load_training_data(dataset_path="dataset", batch_size=32)
+model.fine_tuning(epochs=2, lr=0.00008, model_name="CSR3X-1.1.3", psnr_plot=False, loss_fns=["mse", "mae"])
+```
+## example of using the model to generate upscaled images
+```python
+from CustomIntents import SuperRes
+
+model = SuperRes(input_size=(300, 300), upscale_factor=3)
+model.load_model("CSR3X-1.1.2")
+model.upscale_image_from_path(img_path="test_image_2_300x300.jpg", save_name="test_result_300x300_to_900x900_7.jpg")
+```
+
+## image example
+![DemoSuperRes](images/superres2.jpg)
+
 
 # ImageGenerator class
 you can easily use state of the art StableDiffiusion model with this class
