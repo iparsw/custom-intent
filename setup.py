@@ -17,7 +17,7 @@ setuptools.setup(
     package_data={'': ["cascades/haarcascade_frontalcatface.xml"]},
     install_requires=[
         "gmpy2==2.1.5",
-        "gradio==3.16.2",
+        "gradio==3.34.0",
         "keras==2.10.0",
         "Keras_Preprocessing==1.1.2",
         "matplotlib==3.6.2",
